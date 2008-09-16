@@ -1,0 +1,96 @@
+=================
+INSTALLING PUNJAB
+=================
+
+This document contains instructions on installing punjab
+on your system. 
+
+-------------
+Obtaining Punjab
+-------------
+
+Punjab can be located at the punjab web site, 
+
+   http://www.butterfat.net/wiki/Projects/PunJab
+
+
+-------------
+Dependencies
+-------------
+
+Please make sure all dependencies are met before submitting a troubleshooting question.
+
+- Python 2.5>
+
+- Twisted >= 2.5
+
+  - Twisted-words >= 0.6.0
+  - Twisted-web  >= 0.5.0
+
+  Recommended
+    - Twisted-conch >= 0.5.0
+
+  NOTE : 
+    You can download all of these packages with the Twisted Sumo package. 
+    http://twistedmatrix.com/
+
+- pyopenssl - if you want tls to work.
+
+- A jabber server like jabberd2
+
+
+-------------
+Installing Punjab
+-------------
+
+1. Untar the current punjab-X.X.tar.gz file in a directory you would 
+   like punjab to reside. 
+
+shell>tar vxzf punjab-X.X.tar.gz
+
+2. Run setup to install
+
+shell>python setup.py install
+
+3. Configure punjab - using a tac file.
+
+shell>edit punjab.tac
+# punjab tac file
+from twisted.web import server, resource, static
+from twisted.application import service, internet
+
+from punjab.httpb  import Httpb, HttpbService
+
+root = static.File("./html") # a static html directory
+
+b = resource.IResource(HttpbService(1))
+root.putChild('bosh', b) # url for BOSH
+
+site  = server.Site(root)
+
+application = service.Application("punjab")
+internet.TCPServer(5280, site).setServiceParent(application)
+
+
+4. Run punjab 
+
+shell>twistd -y punjab.tac
+
+5. HAVE FUN!!
+
+
+--------------
+Using a tac file.
+
+
+---------------------------
+Extending Punjab
+---------------------------
+
+You are able to extend punjab in many ways. 
+
+-------------
+Support
+-------------
+
+ http://www.butterfat.net/wiki/Projects/PunJab
