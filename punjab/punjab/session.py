@@ -223,14 +223,13 @@ class Session(jabber.JabberClientFactory, server.Session):
         # create the first waiting request
         d = defer.Deferred()
         timeout = 30
-        self.waiting_requests.append(
-            WaitingRequest(d,
-                           self._startup_timeout,
-                           startup = True,
-                           timeout = timeout,
-                           rid = self.rid - 1))
+        rid = self.rid - 1
+        self.appendWaitingRequest(d, rid, 
+                                  timeout=timeout, 
+                                  poll=self._startup_timeout,
+                                  startup=True,
+                                  )
         
-
     def rawDataIn(self, buf):
         """ Log incoming data on the xmlstream """
         if self.pint.v:
@@ -252,6 +251,49 @@ class Session(jabber.JabberClientFactory, server.Session):
         except:
             log.err()
 
+    def _wrPop(self, data, i=0):
+        """Pop off a waiting requst, do callback, and cache request
+        """
+        wr = self.waiting_requests.pop(i)
+        wr.doCallback(data)
+        self._cacheData(wr.rid, data)
+
+    def clearWaitingRequests(self, hold = 0):
+        """clear number of requests given
+
+           hold - number of requests to clear, default is all
+        """ 
+        while len(self.waiting_requests) > hold:
+            self._wrPop([])
+
+    def _wrError(self, err, i = 0):
+        wr = self.waiting_requests.pop(i)
+        wr.doErrback(err)
+
+
+    def appendWaitingRequest(self, d, rid, timeout=None, poll=None, startup=False):
+        """append waiting request
+        """
+        if timeout is None:
+            timeout = self.wait
+        if poll is None:
+            poll = self._pollTimeout
+        self.waiting_requests.append(
+            WaitingRequest(d,
+                           poll,
+                           timeout = timeout,
+                           rid = rid,
+                           startup=startup))
+
+    def returnWaitingRequests(self):
+        """return a waiting request
+        """
+        while len(self.elems) > 0 and len(self.waiting_requests) > 0:
+            data = self.elems
+            self.elems = []
+            self._wrPop(data)
+
+
     def onExpire(self):
         """ When the session expires call this. """
         if 'onExpire' in dir(self.pint):
@@ -270,16 +312,10 @@ class Session(jabber.JabberClientFactory, server.Session):
             log.msg('SESSION -> Terminate')
         # if there are any elements hanging around and waiting
         # requests, send those off
-        while len(self.elems) > 0 and len(self.waiting_requests) > 0:
-            data = self.elems
-            self.elems = []
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback(data)
+        self.returnWaitingRequests()
+        
+        self.clearWaitingRequests()
 
-        # if there are any waiting requests, send them back blank
-        while len(self.waiting_requests) > 0:
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback([])
         try:
             self.expire()
         except:
@@ -304,32 +340,13 @@ class Session(jabber.JabberClientFactory, server.Session):
             d.addErrback(self.pint.error)    
         if not rid:
             rid = self.rid - 1
-        self.waiting_requests.append(
-            WaitingRequest(d,
-                           self._pollTimeout,
-                           timeout = self.wait,
-                           rid = rid))
+        self.appendWaitingRequest(d, rid)
             
         # check if there is any data to send back to a request
-        if len(self.elems) > 0:
-            data = self.elems
-            # pop off a request and send and reply
-            if len(self.waiting_requests)>0:
-                self.elems = []                            
-                wr = self.waiting_requests.pop(0)
-                wr.doCallback(data)
-                self._cacheData(wr.rid, data)
+        self.returnWaitingRequests()
                 
         # make sure we aren't queueing too many requests
-        while len(self.waiting_requests) > self.hold:
-            if len(self.elems) > 0:
-                data = self.elems
-            else:
-                data = []
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback(data)
-            self._cacheData(wr.rid, data)
-
+        self.clearWaitingRequests(self.hold)
         return d
 
     def _pollTimeout(self, d):
@@ -343,13 +360,12 @@ class Session(jabber.JabberClientFactory, server.Session):
         pop_eye = []
         for i in range(len(self.waiting_requests)):
             if self.waiting_requests[i].deferred == d:
-                wr = self.waiting_requests[i]
                 pop_eye.append(i)
                 self.touch()
-                wr.doCallback([])
-                self._cacheData(wr.rid, [])
+
         for i in pop_eye:
-            wr = self.waiting_requests.pop(i)
+            self._wrPop([],i)
+
 
     def _pollForId(self, d):
         if self.xmlstream.sid:
@@ -402,10 +418,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 
         except:
             log.err(traceback.print_exc())
-            wr = self.waiting_requests.pop(0)
-            
-            wr.doErrback(error.Error("remote-connection-failed"))
-                
+            self._wrError(error.Error("remote-connection-failed"))
             self.disconnect()
             
 
@@ -440,9 +453,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             return
         self.elems.append(f)
         if len(self.waiting_requests) > 0:
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback(self.elems)
-            self._cacheData(wr.rid, self.elems)
+            self.returnWaitingRequests()
             self.elems = [] # reset elems
             self.raw_buffer = u"" # reset raw buffer, features should not be in it
     
@@ -462,21 +473,13 @@ class Session(jabber.JabberClientFactory, server.Session):
         if self.use_raw and self.authid:
             stz = domish.SerializedXML(self.raw_buffer)
             self.raw_buffer = u""
-            
+
+        self.elems.append(stz)            
         if self.waiting_requests and len(self.waiting_requests) > 0:
             # if there are any waiting requests, give them all the
             # data so far, plus this new data
+            self.returnWaitingRequests()
 
-            wr = self.waiting_requests.pop(0)
-
-            data = self.elems + [stz]
-            self.elems = []
-
-            wr.doCallback(data)
-            self._cacheData(wr.rid, data)
-        else:
-            # since there are no waiting requests, just queue the data
-            self.elems.append(stz)
 
     def _startup_timeout(self, d):
         # this can be called if connection failed, or if we connected
@@ -485,17 +488,11 @@ class Session(jabber.JabberClientFactory, server.Session):
             log.msg('================================== %s %s startup timeout ==================================' % (str(self.sid), str(time.time()),))
         for i in range(len(self.waiting_requests)):
             if self.waiting_requests[i].deferred == d:
-                wr = self.waiting_requests.pop(i)
                 # check if we really failed or not
                 if self.authid:
-                    if len(self.elems) > 0:
-                        data = self.elems
-                    else:
-                        data = []
-                    wr.doCallback(data)
-                    self._cacheData(wr.rid, data)
+                    self._wrPop(self.elems, i=i)
                 else:
-                    wr.doErrback(error.Error("remote-connection-failed"))
+                    self._wrError(error.Error("remote-connection-failed"), i=i)
                     
     
     def buildRemoteError(self, err_elem=None):
@@ -615,10 +612,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.elems     = []
         
         if self.waiting_requests:
-            for i in range(len(self.waiting_requests)):
-                wr = self.waiting_requests.pop(i)
-                wr.doCallback()
-                self._cacheData(wr.rid, [])
+            self.clearWaitingRequests()
             del self.waiting_requests
         self.mechanisms = None
         self.features   = None
@@ -686,10 +680,9 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.success = 1
         self.s = s
         # return success to the client
-        if len(self.waiting_requests)>0:		
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback([s])
-            self._cacheData(wr.rid, [s])
+        if len(self.waiting_requests)>0:
+            self._wrPop([s])
+
         self.authenticator._reset()
         if self.use_raw:
             self.raw_buffer = u""
@@ -702,7 +695,4 @@ class Session(jabber.JabberClientFactory, server.Session):
         if d:
             d.errback(self)
         if len(self.waiting_requests)>0:		
-            wr = self.waiting_requests.pop(0)
-            wr.doCallback([sasl_error])
-            self._cacheData(wr.rid, [sasl_error])
-
+            self._wrPop([sasl_error])
