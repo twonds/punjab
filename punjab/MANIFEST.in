@@ -1,8 +1,0 @@
-include LICENSE.txt README.txt TODO.txt INSTALL.txt NOTES.txt MANIFEST
-include html/*
-recursive-include punjab *
-recursive-include twisted *
-recursive-include html/js *
-recursive-include html/css *
-recursive-include html/images *
-global-exclude *~ .cvs* *.pyc .svn*
