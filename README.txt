@@ -21,7 +21,7 @@ allows persistent client connections to a XMPP server.
 
 For more information about punjab see the following URL :
 
-http://www.butterfat.net/wiki/Projects/PunJab
+http://code.stanziq.com/punjab
 
 
 CONTRIBUTORS

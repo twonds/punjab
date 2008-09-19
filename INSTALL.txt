@@ -11,7 +11,7 @@ Obtaining Punjab
 
 Punjab can be located at the punjab web site, 
 
-   http://www.butterfat.net/wiki/Projects/PunJab
+   http://code.stanziq.com/punjab
 
 
 -------------
@@ -93,4 +93,4 @@ You are able to extend punjab in many ways.
 Support
 -------------
 
- http://www.butterfat.net/wiki/Projects/PunJab
+ http://code.stanziq.com/punjab
