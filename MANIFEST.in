@@ -1,6 +1,7 @@
 include LICENSE.txt README.txt TODO.txt INSTALL.txt NOTES.txt MANIFEST
 include html/*
 recursive-include punjab *
+recursive-include tests *
 recursive-include twisted *
 recursive-include html/js *
 recursive-include html/css *
