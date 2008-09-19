@@ -67,12 +67,9 @@ def make_session(pint, attrs, session_type='BOSH'):
     s.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, s.connectEvent)
     s.addBootstrap(xmlstream.STREAM_ERROR_EVENT, s.streamError)
     s.addBootstrap(xmlstream.STREAM_END_EVENT, s.connectError)    
-
-    if attrs.has_key('inactivity'):
-        s.inactivity = attrs['inactivity']
-    else:
-        s.inactivity = 900 # 15 mins
-        
+    
+    s.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
+    
     s.secure = 0
     s.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
     
@@ -310,6 +307,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.terminated = True
         if self.verbose:
             log.msg('SESSION -> Terminate')
+        
         # if there are any elements hanging around and waiting
         # requests, send those off
         self.returnWaitingRequests()
@@ -341,10 +339,10 @@ class Session(jabber.JabberClientFactory, server.Session):
         if not rid:
             rid = self.rid - 1
         self.appendWaitingRequest(d, rid)
-            
+
         # check if there is any data to send back to a request
         self.returnWaitingRequests()
-                
+
         # make sure we aren't queueing too many requests
         self.clearWaitingRequests(self.hold)
         return d
@@ -355,7 +353,6 @@ class Session(jabber.JabberClientFactory, server.Session):
         Since the timeout function is called, we must return an empty
         reply as there is no data to send back.
         """
-        
         # find the request that timed out and reply
         pop_eye = []
         for i in range(len(self.waiting_requests)):

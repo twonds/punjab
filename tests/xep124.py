@@ -133,6 +133,75 @@ class XEP0124TestCase(unittest.TestCase):
 
         return d
 
+
+    def testSessionTimeout(self):
+        """Test if we timeout correctly
+        """
+        d = defer.Deferred()
+
+        def testTimeout(res):
+            passed = True
+            
+            if res.value[0]!='404':
+                passed = False
+                d.errback((Exception, 'Wrong Value %s '% (str(res.value),)))
+            if passed:
+                d.callback(True)
+            else:
+                log.err(res)
+
+        def testCBTimeout(res):
+            # check for terminate if we expire 
+            terminate = res[0].getAttribute('type',False)
+            
+            if str(terminate) != 'terminate':
+                d.errback((Exception, 'Was not terminate'))
+                return
+            d.callback(True)
+
+        def sendTest():
+            sd = self.send()
+            sd.addCallback(testCBTimeout)
+            sd.addErrback(testTimeout)
+            
+
+        def testResend(res):
+            self.failUnless(res[0].name=='body', 'Wrong element')
+            s = self.b.service.sessions[self.sid]
+            self.failUnless(s.inactivity==10,'Wrong inactivity value')
+            self.failUnless(s.wait==10, 'Wrong wait value')
+            reactor.callLater(s.wait+s.inactivity+1, sendTest)
+            
+
+        def testSessionCreate(res):
+            self.failUnless(res[0].name=='body', 'Wrong element')            
+            self.failUnless(res[0].hasAttribute('sid'),'Not session id')
+            self.sid = res[0]['sid']
+
+            # send and wait 
+            sd = self.send()
+            
+            sd.addCallback(testResend)
+            
+
+
+        BOSH_XML = """<body content='text/xml; charset=utf-8'
+      hold='1'
+      rid='%d'
+      to='localhost'
+      route='xmpp:127.0.0.1:5222'
+      ver='1.6'
+      wait='10'
+      ack='1'
+      inactivity='10'
+      xml:lang='en'
+      xmlns='http://jabber.org/protocol/httpbind'/>
+ """% (self.rid,)
+
+        self.proxy.connect(BOSH_XML).addCallback(testSessionCreate)
+        d.addErrback(self.fail)
+        return d
+
     def testStreamError(self):
         """
         This is to test if we get stream errors when there are no waiting requests.
@@ -174,6 +243,7 @@ class XEP0124TestCase(unittest.TestCase):
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
 
         return d
+
 
 
     def testFeaturesError(self):
