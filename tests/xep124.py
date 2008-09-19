@@ -13,7 +13,7 @@ from twisted.python import log
 
 from punjab.httpb import HttpbService
 from punjab.xmpp import server as xmppserver
-import httpb_client
+from punjab import httpb_client
 
 class DummyTransport:
     
