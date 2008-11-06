@@ -16,7 +16,7 @@ Copyright (C) 2001-2008 Christopher Zorn , tofu@thetofu.com
 
 GENERAL INFORMATION
 
-PunJab is a HTTP jabber client interface. It is a BOSH server that
+PunJab is a HTTP jabber client interface. It is a BOSH connection manager that
 allows persistent client connections to a XMPP server. 
 
 For more information about punjab see the following URL :
