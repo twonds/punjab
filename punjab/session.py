@@ -80,9 +80,9 @@ def make_session(pint, attrs, session_type='BOSH'):
         s.authenticator.useTls = 0
         # reactor.connectTCP(s.hostname, s.port, s)
     if pint.v:
-        log.msg('================================== %s connect ==================================' % (str(time.time()),))
+        log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
     if attrs.has_key('route'):
-        reactor.connectTCP(s.hostname, s.port, s)
+        reactor.connectTCP(s.hostname, s.port, s, bindAddress=pint.bindAddress)
     else:
         connector = XMPPClientConnector(reactor, s.hostname, s)
         connector.connect()

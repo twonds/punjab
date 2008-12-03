@@ -514,7 +514,7 @@ class HttpbService(punjab.Service):
 
     implements(IHttpbService)
 
-    def __init__(self, verbose = 0, polling = 15, use_raw = False):
+    def __init__(self, verbose = 0, polling = 15, use_raw = False, bindAddress=("0.0.0.0", 0)):
         self.v  = verbose
         self.sessions = {}
         self.counter  = 0
@@ -526,6 +526,8 @@ class HttpbService(punjab.Service):
         self.poll_timeouts = task.LoopingCall(self._doPollTimeOuts)
 
         self.poll_timeouts.start(3) # run every 3 seconds
+
+        self.bindAddress=bindAddress
 
     def _doPollTimeOuts(self):
         """
