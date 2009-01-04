@@ -84,7 +84,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     connect_srv = True
     if attrs.has_key('route'):
         connect_srv = False
-    if s.hostname in ['localhost', '127.0.0.1', 127.0.0.1]:
+    if s.hostname in ['localhost', '127.0.0.1']:
         connect_srv = False
     if not connect_srv:
         reactor.connectTCP(s.hostname, s.port, s)
