@@ -31,7 +31,7 @@ class XMPPClientConnector(SRVConnector):
     def __init__(self, client_reactor, domain, factory):
         """ Init """
         SRVConnector.__init__(self, client_reactor, 'xmpp-client', domain, factory)
-
+        self.timeout = [1,3]
 
     def pickServer(self):
         """
@@ -81,7 +81,12 @@ def make_session(pint, attrs, session_type='BOSH'):
         # reactor.connectTCP(s.hostname, s.port, s)
     if pint.v:
         log.msg('================================== %s connect ==================================' % (str(time.time()),))
+    connect_srv = True
     if attrs.has_key('route'):
+        connect_srv = False
+    if s.hostname in ['localhost', '127.0.0.1', 127.0.0.1]:
+        connect_srv = False
+    if not connect_srv:
         reactor.connectTCP(s.hostname, s.port, s)
     else:
         connector = XMPPClientConnector(reactor, s.hostname, s)
