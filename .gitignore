@@ -1,0 +1,6 @@
+*.pyc
+_trial_temp
+twistd.log
+twistd.pid
+dropin.cache
+*.~*

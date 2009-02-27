@@ -120,7 +120,6 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
 
         
     def _reset(self):
-        log.msg('\n\n======================= reset ====================\n\n')
         # need this to be in xmlstream
         self.xmlstream.stream = domish.elementStream()
         self.xmlstream.stream.DocumentStartEvent = self.xmlstream.onDocumentStart

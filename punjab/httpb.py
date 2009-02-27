@@ -331,11 +331,13 @@ class Httpb(resource.Resource):
             self.hp._reset()
 
             if getattr(body_tag, 'name', '') != "body":
-                log.msg('Client sent bad POST data')
+                if self.service.v:
+                    log.msg('Client sent bad POST data')
                 self.send_http_error(400, request)
                 return server.NOT_DONE_YET
         except domish.ParserError:
             log.msg('ERROR: Xml Parse Error')
+            log.err()
             self.hp._reset()
             self.send_http_error(400, request) 
             return server.NOT_DONE_YET
@@ -350,12 +352,14 @@ class Httpb(resource.Resource):
                 # sid is an existing session
                 if body_tag.getAttribute('rid'):
                     request.rid = body_tag['rid']
-                    log.msg(request.rid)
+                    if self.service.v:
+                        log.msg(request.rid)
                 
                 s, d = self.service.parseBody(body_tag, xmpp_elements)
                 d.addCallback(self.return_httpb, s, request)
             elif body_tag.hasAttribute('sid'):
-                log.msg("no sid is found but the body element has a 'sid' attribute")
+                if self.service.v:
+                    log.msg("no sid is found but the body element has a 'sid' attribute")
                 # This is an error, no sid is found but the body element has a 'sid' attribute
                 self.send_http_error(404, request)
                 return server.NOT_DONE_YET
@@ -486,8 +490,9 @@ class Httpb(resource.Resource):
 
         if children:
             b.children += children
-        
-        log.msg('HTTPB Error %d' %(int(code),))
+
+        if self.service.v:
+            log.msg('HTTPB Error %d' %(int(code),))
         
         if int(code) != 400 and int(code) != 404 and int(code) != 403:
             if data != '':
@@ -498,7 +503,8 @@ class Httpb(resource.Resource):
                     t['xmlns'] = 'urn:ietf:params:xml:ns:xmpp-streams'
                     
             bxml           = b.toXml().encode(charset, 'replace')
-            log.msg('HTTPB Return Error: ' + str(code) + ' -> ' + bxml)
+            if self.service.v:
+                log.msg('HTTPB Return Error: ' + str(code) + ' -> ' + bxml)
             request.setHeader("content-type", "text/xml")
             request.setHeader("content-length", len(bxml))    
             request.write(bxml)
@@ -546,7 +552,8 @@ class HttpbService(punjab.Service):
     
         # look for rid
         if not body.hasAttribute('rid') or body['rid']=='':
-            log.msg('start session called but we had a rid')
+            if self.v:
+                log.msg('start session called but we had a rid')
             return None, defer.fail(error.NotFound)
                 
         # look for to
@@ -578,14 +585,16 @@ class HttpbService(punjab.Service):
             if body.hasAttribute('sid'):
                 sid = str(body['sid'])
             else:
-                log.msg('Session ID not found')
+                if self.v:
+                    log.msg('Session ID not found')
                 return None, defer.fail(error.NotFound)
 
             if self.inSession(body):
                 s = self.sessions[sid]
                 s.touch() # any connection should be a renew on wait
             else:
-                log.msg('session does not exist?')
+                if self.v:
+                    log.msg('session does not exist?')
                 return None, defer.fail(error.NotFound)
             ##  XXX this seems to break xmpp:restart='true'  --vargas
             ##  (cf. http://www.xmpp.org/extensions/xep-0206.html#preconditions-sasl [Example 10])
@@ -609,7 +618,8 @@ class HttpbService(punjab.Service):
                         if key == s.key:
                             s.key = next_key
                         else:
-                            log.msg('Error in key')
+                            if self.v:
+                                log.msg('Error in key')
                             return s, defer.fail(error.NotFound)                        
                     else:
                         log.err()
@@ -627,10 +637,12 @@ class HttpbService(punjab.Service):
                     # implements issue 32 and returns the data returned on a dropped connection
                     return s, defer.succeed(s.cache_data[int(body['rid'])])
                 if abs(int(body['rid']) - int(s.rid)) > s.window:
-                    log.msg('This rid is invalid %s %s ' % (str(body['rid']), str(s.rid),))
+                    if self.v:
+                        log.msg('This rid is invalid %s %s ' % (str(body['rid']), str(s.rid),))
                     return  s, defer.fail(error.NotFound)
             else:
-                log.msg('There is no rid on this request')
+                if self.v:
+                    log.msg('There is no rid on this request')
                 return  s, defer.fail(error.NotFound)
             
             return s, self._parse(s, body, xmpp_elements)
@@ -643,8 +655,9 @@ class HttpbService(punjab.Service):
             
     def onExpire(self, session_id):
         """ preform actions based on when the jabber connection expires """
-        log.msg('expire (%s)' % (str(session_id),))
-        log.msg(len(self.sessions.keys()))
+        if self.v:
+            log.msg('expire (%s)' % (str(session_id),))
+            log.msg(len(self.sessions.keys()))
         
     def _parse(self, session, body_tag, xmpp_elements):
         # increment the request counter

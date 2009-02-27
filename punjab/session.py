@@ -170,6 +170,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         
         self.cache_data = {}
         self.verbose    = self.pint.v
+        self.noisy      = self.verbose
 
         self.version = attrs.get('version', 0.0)
                 
