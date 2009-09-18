@@ -462,6 +462,7 @@ class Httpb(resource.Resource):
     def return_body(self, request, b, charset="utf-8"):
         request.setResponseCode(200)
         bxml = b.toXml(prefixes=ns.XMPP_PREFIXES.copy()).encode(charset,'replace')
+        
         request.setHeader('content-type', 'text/xml')
         request.setHeader('content-length', len(bxml))
         if self.service.v:
