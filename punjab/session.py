@@ -78,7 +78,7 @@ def make_session(pint, attrs, session_type='BOSH'):
         s.authenticator.useTls = 1
     else:
         s.authenticator.useTls = 0
-        # reactor.connectTCP(s.hostname, s.port, s)
+
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
         
@@ -454,6 +454,9 @@ class Session(jabber.JabberClientFactory, server.Session):
         # If we get tls, then we should start tls, wait and then return
         # Here we wait, the tls initializer will start it
         if starttls and self.secure:
+            if self.verbose:
+                log.msg("Wait until starttls is completed.")
+                log.msg(initializers)
             return
         self.elems.append(f)
         if len(self.waiting_requests) > 0:
