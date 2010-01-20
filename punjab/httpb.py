@@ -302,11 +302,20 @@ class Httpb(resource.Resource):
         self.verbose  = v
 
         self.polling = self.service.polling or 15
+
+    def render_OPTIONS(self, request):
+        request.setHeader('Access-Control-Allow-Origin', '*')
+        request.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+        request.setHeader('Access-Control-Max-Age', '86400')
+        return ""
                 
     def render_GET(self, request):
         """
         GET is not used, print docs.
         """
+        request.setHeader('Access-Control-Allow-Origin', '*')
+        request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
         return """<html>
                  <body>
                  <a href='http://www.xmpp.org/extensions/xep-0124.html'>XEP-0124</a> - BOSH
@@ -317,6 +326,8 @@ class Httpb(resource.Resource):
         """
         Parse received xml
         """
+        request.setHeader('Access-Control-Allow-Origin', '*')
+        request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
         request.content.seek(0, 0)
         if self.service.v:
             log.msg('HEADERS %s:' % (str(time.time()),))
