@@ -532,8 +532,12 @@ class HttpbService(punjab.Service):
 
     implements(IHttpbService)
 
-    def __init__(self, verbose = 0, polling = 15, 
-                 use_raw = False, bindAddress=("0.0.0.0", 0), session_creator = None):
+    white_list = []
+
+    def __init__(self, 
+                 verbose = 0, polling = 15, 
+                 use_raw = False, bindAddress=("0.0.0.0", 0), 
+                 session_creator = None):
         if session_creator is not None:
             self.make_session = session_creator
         else:
@@ -577,6 +581,9 @@ class HttpbService(punjab.Service):
         if not body.hasAttribute('to') or body['to']=='':
             return None, defer.fail(error.BadRequest)
         
+        if self.white_list and body['to'] not in self.white_list:
+            return None, defer.fail(error.BadRequest)
+
         # look for wait
         if not body.hasAttribute('wait') or body['wait']=='':
             body['wait'] = 3
