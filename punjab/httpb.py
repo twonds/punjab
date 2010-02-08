@@ -532,7 +532,12 @@ class HttpbService(punjab.Service):
 
     implements(IHttpbService)
 
-    def __init__(self, verbose = 0, polling = 15, use_raw = False, bindAddress=("0.0.0.0", 0)):
+    def __init__(self, verbose = 0, polling = 15, 
+                 use_raw = False, bindAddress=("0.0.0.0", 0), session_creator = None):
+        if session_creator is not None:
+            self.make_session = session_creator
+        else:
+            self.make_session = make_session
         self.v  = verbose
         self.sessions = {}
         self.counter  = 0
@@ -588,7 +593,7 @@ class HttpbService(punjab.Service):
         if not body.hasAttribute('inactivity'):
             body['inactivity'] = 60 
         
-        return make_session(self, body.attributes)
+        return self.make_session(self, body.attributes)
                 
 
     def parseBody(self, body, xmpp_elements):
