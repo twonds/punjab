@@ -9,6 +9,9 @@ root = static.File("./html")
 
 #b = resource.IResource(HttpbService(1, use_raw=True))
 b = resource.IResource(HttpbService(1))
+# You can limit servers with a whitelist. 
+# The whitelist is a list of strings to match domain names.
+# b.white_list = ['jabber.org', 'thetofu.com']
 root.putChild('http-bind', b)
 
 
