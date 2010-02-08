@@ -61,7 +61,7 @@ def makeService(config):
     if config['httpb']:
         b = httpb.HttpbService(config['verbose'], config['polling'])
         if config['httpb'] == '':
-            r.putChild('httpb', resource.IResource(b))
+            r.putChild('http-bind', resource.IResource(b))
         else:
             r.putChild(config['httpb'], resource.IResource(b))
 

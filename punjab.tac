@@ -9,7 +9,7 @@ root = static.File("./html")
 
 #b = resource.IResource(HttpbService(1, use_raw=True))
 b = resource.IResource(HttpbService(1))
-root.putChild('xmpp-httpbind', b)
+root.putChild('http-bind', b)
 
 
 site  = server.Site(root)

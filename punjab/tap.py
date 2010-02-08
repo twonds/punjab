@@ -6,7 +6,7 @@ class Options(usage.Options):
     optParameters = [
         ('host', None, 'localhost'),
         ('port', None, 5280),
-        ('httpb', 'b', "xmpp-httpbind"),
+        ('httpb', 'b', "http-bind"),
         ('polling', None, '15'),
         ('html_dir', None, "./html"),
         ('ssl', None, None),
