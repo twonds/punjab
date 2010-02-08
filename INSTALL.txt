@@ -24,6 +24,7 @@ Please make sure all dependencies are met before submitting a troubleshooting qu
 
 - Twisted >= 2.5
 
+  - Twisted-names 
   - Twisted-words >= 0.6.0
   - Twisted-web  >= 0.5.0
 
