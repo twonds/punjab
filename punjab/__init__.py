@@ -60,8 +60,10 @@ def makeService(config):
 
     if config['httpb']:
         b = httpb.HttpbService(config['verbose'], config['polling'])
-        r.putChild('httpb', resource.IResource(b))
-
+        if config['httpb'] == '':
+            r.putChild('httpb', resource.IResource(b))
+        else:
+            r.putChild(config['httpb'], resource.IResource(b))
 
     site  = server.Site(r)
 
