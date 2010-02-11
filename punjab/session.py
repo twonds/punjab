@@ -22,6 +22,11 @@ from punjab.xmpp import ns
 import time
 import error
 
+try:
+    from twisted.internet import ssl
+except ImportError:
+    log.msg("SSL ERROR: You do not have ssl support this may cause problems with tls client connections.")
+
 
 
 class XMPPClientConnector(SRVConnector):
