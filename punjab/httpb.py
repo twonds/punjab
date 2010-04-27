@@ -581,9 +581,21 @@ class HttpbService(punjab.Service):
         # look for to
         if not body.hasAttribute('to') or body['to']=='':
             return None, defer.fail(error.BadRequest)
-        
-        if self.white_list and body['to'] not in self.white_list:
-            return None, defer.fail(error.BadRequest)
+
+        # The target host must match an entry in the white_list. white_list
+        # entries beginning with periods will allow subdomains.
+        #
+        # e.g.: A 'to' of 'foo.example.com' would not match 'example.com' but
+        #       would match '.example.com'
+        if self.white_list:
+            valid_host = False
+            for domain in self.white_list:
+                if body['to'] == domain or \
+                   domain[0] == '.' and body['to'].endswith(domain):
+                    valid_host = True
+                    break
+            if not valid_host:
+                return None, defer.fail(error.BadRequest)
 
         # look for wait
         if not body.hasAttribute('wait') or body['wait']=='':

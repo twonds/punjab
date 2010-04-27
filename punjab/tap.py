@@ -13,7 +13,9 @@ class Options(usage.Options):
         ('ssl_privkey', None, "ssl.key"),
         ('ssl_cert', None, "ssl.crt"),
         ('white_list', None, None,
-            'Comma separated list of domains to allow connections to.'),
+            'Comma separated list of domains to allow connections to. \
+            Begin an entry with a period to allow connections to subdomains. \
+            e.g.: --white_list=.example.com,domain.com'),
     ]
 
     optFlags = [
