@@ -1,0 +1,23 @@
+Fix stream:error namespace bug (Garret Heaton <powdahound@gmail.com>)
+
+Add whitelist command line option. (Garret Heaton <powdahound@gmail.com>)
+
+Add ability for wildcard subdomains (Garret Heaton <powdahound@gmail.com>)
+
+== Mon Feb 8, 2010 ==
+
+Abstract out the different XEPs in order to split 124 for BOSH and 206 for XMPP Over
+BOSH. Allows for other protocols over BOSH. (commit 41fddc8)
+
+Flash Crossdomain support (commit ee8aae1)
+
+W3C CORS Support (commit 41ff4c3)
+
+Default Resource url http-bind (commit 8020ba1)
+
+Prevent Domains using a white list (commit 08ca878)
+
+Added Twisted-names to dependency list (commit 6b65977)
+
+Make ssl errors better.
+

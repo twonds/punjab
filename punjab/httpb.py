@@ -586,12 +586,17 @@ class HttpbService(punjab.Service):
         # entries beginning with periods will allow subdomains.
         #
         # e.g.: A 'to' of 'foo.example.com' would not match 'example.com' but
-        #       would match '.example.com'
+        #       would match '.example.com' or '*example.com' or '*.example.com'
         if self.white_list:
             valid_host = False
             for domain in self.white_list:
                 if body['to'] == domain or \
-                   domain[0] == '.' and body['to'].endswith(domain):
+                        (domain[0] == '*' and domain[1] == '.' and\
+                             body['to'].endswith(domain[2:])) or \
+                        (domain[0] == '*' and \
+                             body['to'].endswith(domain[1:])) or \
+                        (domain[0] == '.' and \
+                             body['to'].endswith(domain[1:])):
                     valid_host = True
                     break
             if not valid_host:

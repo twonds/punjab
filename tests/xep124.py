@@ -36,7 +36,8 @@ class XEP0124TestCase(unittest.TestCase):
         os.mkdir("./html") # create directory in _trial_temp
         self.root = static.File("./html") # make _trial_temp/html the root html directory
         self.rid = random.randint(0,10000000)
-        self.b = resource.IResource(HttpbService(1))
+        self.hbs = HttpbService(1)
+        self.b = resource.IResource(self.hbs)
         self.root.putChild('xmpp-bosh', self.b)
 
         self.site  = server.Site(self.root)
@@ -136,6 +137,64 @@ class XEP0124TestCase(unittest.TestCase):
         d.addErrback(_error)
         return d
 
+
+    def testWhiteList(self):
+        """
+        Basic tests for whitelisting domains.
+        """
+        
+        def _testSessionCreate(res):
+            self.failUnless(res[0].name=='body', 'Wrong element')            
+            self.failUnless(res[0].hasAttribute('sid'), 'Not session id')
+            
+        def _error(e):
+            # This fails on DNS 
+            log.err(e)
+            
+        self.hbs.white_list = ['.localhost']
+        BOSH_XML = """<body content='text/xml; charset=utf-8'
+      hold='1'
+      rid='1573741820'
+      to='localhost'
+      secure='true'
+      ver='1.6'
+      wait='60'
+      ack='1'
+      xml:lang='en'
+      xmlns='http://jabber.org/protocol/httpbind'/>
+ """
+        
+        d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
+        d.addErrback(_error)
+        return d
+
+    def testWhiteListError(self):
+        """
+        Basic tests for whitelisting domains.
+        """
+        
+        def _testSessionCreate(res):
+            self.fail("Session should not be created")
+            
+        def _error(e):
+            return True
+            
+        self.hbs.white_list = ['test']
+        BOSH_XML = """<body content='text/xml; charset=utf-8'
+      hold='1'
+      rid='1573741820'
+      to='localhost'
+      secure='true'
+      ver='1.6'
+      wait='60'
+      ack='1'
+      xml:lang='en'
+      xmlns='http://jabber.org/protocol/httpbind'/>
+ """
+        
+        d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
+        d.addErrback(_error)
+        return d
 
     def testSessionTimeout(self):
         """Test if we timeout correctly
