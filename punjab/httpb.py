@@ -486,6 +486,7 @@ class Httpb(resource.Resource):
             
     def send_http_error(self, code, request, condition = 'undefined-condition', typ = 'terminate', data = '', charset = 'utf-8', children=None):
         request.setResponseCode(int(code))
+        xml_prefixes = ns.XMPP_PREFIXES.copy()
         
         b = domish.Element((NS_BIND, "body"))
         if condition:
@@ -498,7 +499,7 @@ class Httpb(resource.Resource):
         else:
             b['type']      = 'terminate'
         punjab.uriCheck(b, NS_BIND)
-        bxml           = b.toXml().encode(charset, 'replace')
+        bxml = b.toXml(prefixes=xml_prefixes).encode(charset, 'replace')
 
         if children:
             b.children += children
@@ -514,7 +515,7 @@ class Httpb(resource.Resource):
                     t = b.addElement('text', content = str(data))
                     t['xmlns'] = 'urn:ietf:params:xml:ns:xmpp-streams'
                     
-            bxml           = b.toXml().encode(charset, 'replace')
+            bxml = b.toXml(prefixes=xml_prefixes).encode(charset, 'replace')
             if self.service.v:
                 log.msg('HTTPB Return Error: ' + str(code) + ' -> ' + bxml)
             request.setHeader("content-type", "text/xml")
