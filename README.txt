@@ -1,4 +1,4 @@
-Copyright (C) 2001-2009 Christopher Zorn , tofu@thetofu.com
+Copyright (C) 2001-20010 Christopher Zorn , tofu@thetofu.com
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -27,3 +27,4 @@ http://code.stanziq.com/punjab
 CONTRIBUTORS
 
 Jack Moffitt xmpp:jackm@jabber.org - Improved HTTP Binding and Polling
+Garret Heaton <powdahound@gmail.com> - Whitelist improvements and bugfixes.
