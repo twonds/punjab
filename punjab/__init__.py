@@ -13,6 +13,26 @@ def uriCheck(elem, uri):
     if str(elem.toXml()).find('xmlns') == -1:
         elem['xmlns'] = uri
 
+
+class PunjabService(service.MultiService):
+    """Punjab parent service"""
+
+    httpb = None
+
+    def startService(self):
+        print '----------> Punjab is starting.'
+        return service.MultiService.startService(self)
+
+    def stopService(self):
+        print '----------> Punjab is stopping.'
+
+        def cb(result):
+            return service.MultiService.stopService(self)
+
+        d = self.httpb.stopService()
+        d.addCallback(cb).addErrback(log.err)
+        return d
+
 class Service(service.Service):
     """
     Punjab generice service
@@ -48,7 +68,7 @@ def makeService(config):
     import httpb
 
 
-    serviceCollection = service.MultiService()
+    serviceCollection = PunjabService()
 
     if config['html_dir']:
         r = static.File(config['html_dir'])
@@ -85,5 +105,7 @@ def makeService(config):
         
         sm.setServiceParent(serviceCollection)
 
-    return sm
+    serviceCollection.httpb = b
+
+    return serviceCollection
 

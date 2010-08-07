@@ -619,7 +619,18 @@ class HttpbService(punjab.Service):
             body['inactivity'] = 60 
         
         return self.make_session(self, body.attributes)
-                
+
+    def stopService(self):
+        """Perform shutdown procedures."""
+        log.msg("Stopping HTTPB service.")
+        self.terminateSessions()
+        return defer.succeed(True)
+
+    def terminateSessions(self):
+        """Terminate all active sessions."""
+        log.msg('Terminating %d BOSH sessions.' % len(self.sessions))
+        for s in self.sessions.values():
+            s.terminate()
 
     def parseBody(self, body, xmpp_elements):
         try:
