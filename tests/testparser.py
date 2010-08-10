@@ -74,6 +74,17 @@ class ParseTestCase(unittest.TestCase):
         self.failUnless(e[1]==u"<iq type='get' id='981:getallignorelists'><query xmlns='jabber:iq:privacy'/></iq>", 'invalid xml')
         
 
+    def testParseEscapedAttribute(self):
+        XML = """<body rid='4019888743' xmlns='http://jabber.org/protocol/httpbind' sid='948972a64d524f862107cdbd748d1d16'><presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/></body>"""
+
+        hp = HttpbParse()
+
+        b, e = hp.parse(XML)
+
+        ex = "<presence to='room@conf.example.com/D&apos;Artagnan Longfellow' from='dude@example.com'/>"
+        self.assertEquals(e[0], ex)
+
+
     def testPrefixes(self):
         XML = """<body rid='384852951' xmlns='http://jabber.org/protocol/httpbind' sid='e46501b24abd334c062598498a8e02ba'><auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/></body>"""
 

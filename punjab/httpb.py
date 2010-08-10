@@ -74,6 +74,7 @@ class HttpbElementStream(domish.ExpatElementStream):
                 attr_str = attr_str + " xmlns:"+aqname[0] + "='" + aqname[1] + "'" 
                 del attrs[k]
 
+            v = domish.escapeToXml(v, True)
             attr_str = attr_str + " " + k + "='" + v + "'" 
 
         raw_xml = raw_xml % (attr_str,)
