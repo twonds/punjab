@@ -20,12 +20,9 @@ class PunjabService(service.MultiService):
     httpb = None
 
     def startService(self):
-        print '----------> Punjab is starting.'
         return service.MultiService.startService(self)
 
     def stopService(self):
-        print '----------> Punjab is stopping.'
-
         def cb(result):
             return service.MultiService.stopService(self)
 

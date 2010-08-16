@@ -623,13 +623,15 @@ class HttpbService(punjab.Service):
 
     def stopService(self):
         """Perform shutdown procedures."""
-        log.msg("Stopping HTTPB service.")
+        if self.v:
+            log.msg("Stopping HTTPB service.")
         self.terminateSessions()
         return defer.succeed(True)
 
     def terminateSessions(self):
         """Terminate all active sessions."""
-        log.msg('Terminating %d BOSH sessions.' % len(self.sessions))
+        if self.v:
+            log.msg('Terminating %d BOSH sessions.' % len(self.sessions))
         for s in self.sessions.values():
             s.terminate()
 
