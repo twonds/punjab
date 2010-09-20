@@ -310,6 +310,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         if self.verbose and not getattr(self, 'terminated', False):
             log.msg(self.sid)
             log.msg(self.rid)
+            log.msg(self.waiting_requests)
             log.msg('SESSION -> We have expired')
         self.disconnect()
     
@@ -342,7 +343,6 @@ class Session(jabber.JabberClientFactory, server.Session):
         request by returning a deferred which will get called back
         when there is data or when the wait timeout expires.
         """
-        
         # queue this request
         if d is None:
             d = defer.Deferred()
@@ -351,10 +351,9 @@ class Session(jabber.JabberClientFactory, server.Session):
         if not rid:
             rid = self.rid - 1
         self.appendWaitingRequest(d, rid)
-
         # check if there is any data to send back to a request
         self.returnWaitingRequests()
-
+        
         # make sure we aren't queueing too many requests
         self.clearWaitingRequests(self.hold)
         return d

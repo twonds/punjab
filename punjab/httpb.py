@@ -644,7 +644,6 @@ class HttpbService(punjab.Service):
                 if self.v:
                     log.msg('Session ID not found')
                 return None, defer.fail(error.NotFound)
-
             if self.inSession(body):
                 s = self.sessions[sid]
                 s.touch() # any connection should be a renew on wait
@@ -685,7 +684,8 @@ class HttpbService(punjab.Service):
                 log.msg('HTTPB ERROR: ')
                 log.err()
                 return s, defer.fail(error.NotFound)
-                    
+            
+        
             # need to check if this is a valid rid (within tolerance)
             if body.hasAttribute('rid') and body['rid']!='': 
                 if s.cache_data.has_key(int(body['rid'])):
@@ -749,7 +749,6 @@ class HttpbService(punjab.Service):
                     el.defaultUri = None
                     
                 session.sendRawXml(el)
-
 
         if body_tag.hasAttribute('type') and \
            body_tag['type'] == 'terminate':

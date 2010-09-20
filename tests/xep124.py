@@ -15,97 +15,14 @@ from punjab.httpb import HttpbService
 from punjab.xmpp import server as xmppserver
 from punjab import httpb_client
 
-class DummyTransport:
-    
-    def __init__(self):
-        self.data = []
- 	       
-    def write(self, bytes):
-        self.data.append(bytes)
- 	
-    def loseConnection(self, *args, **kwargs):
-        self.data = []
+import test_basic
 
-class XEP0124TestCase(unittest.TestCase):
+
+class XEP0124TestCase(test_basic.TestCase):
     """
     Tests for Punjab compatability with http://www.xmpp.org/extensions/xep-0124.html
     """
 
-    def setUp(self):
-        # set up punjab
-        os.mkdir("./html") # create directory in _trial_temp
-        self.root = static.File("./html") # make _trial_temp/html the root html directory
-        self.rid = random.randint(0,10000000)
-        self.hbs = HttpbService(1)
-        self.b = resource.IResource(self.hbs)
-        self.root.putChild('xmpp-bosh', self.b)
-
-        self.site  = server.Site(self.root)
-        
-        self.p =  reactor.listenTCP(0, self.site, interface="127.0.0.1")
-        self.port = self.p.getHost().port
-
-        # set up proxy
-        
-        self.proxy = httpb_client.Proxy(self.getURL())
-        self.sid   = None
-        self.keys  = httpb_client.Keys()
-
-        # set up dummy xmpp server
-        
-        self.server_service = xmppserver.XMPPServerService()
-        self.server_factory = xmppserver.IXMPPServerFactory(self.server_service)
-        self.server = reactor.listenTCP(5222, self.server_factory, interface="127.0.0.1")
-
-        # Hook the server's buildProtocol to make the protocol instance
-        # accessible to tests.
-        buildProtocol = self.server_factory.buildProtocol
-        d1 = defer.Deferred()
-        def _rememberProtocolInstance(addr):
-            self.server_protocol = buildProtocol(addr)
-            # keeping this around because we may want to wrap this specific to tests
-            # self.server_protocol = protocol.wrappedProtocol
-            d1.callback(None)
-            return self.server_protocol
-        self.server_factory.buildProtocol = _rememberProtocolInstance
-
-
-    def getURL(self, path = "xmpp-bosh"):
-        return "http://127.0.0.1:%d/%s" % (self.port, path)
-
-
-    def key(self,b):
-        if self.keys.lastKey():
-            self.keys.setKeys()
-        
-        if self.keys.firstKey():
-            b['newkey'] = self.keys.getKey()
-        else:
-            b['key'] = self.keys.getKey()
-        return b 
-
-    def resend(self, ext = None):
-        self.rid = self.rid - 1
-        return self.send(ext)
-
-    def send(self, ext = None):
-        b = domish.Element(("http://jabber.org/protocol/httpbind","body"))
-        b['content']  = 'text/xml; charset=utf-8'
-        self.rid = self.rid + 1
-        b['rid']      = str(self.rid)
-        b['sid']      = str(self.sid)
-        b['xml:lang'] = 'en'
-        
-        if ext is not None:
-            if isinstance(ext, domish.Element):
-                b.addChild(ext)
-            else:
-                b.addRawXml(ext)
-
-        b = self.key(b)
-        
-        d = self.proxy.send(b)
-        return d
 
     def testCreateSession(self):
         """
@@ -323,10 +240,9 @@ class XEP0124TestCase(unittest.TestCase):
             self.failUnless(res[1][0].name=='features','Did not get initial features')
             
             # self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>")
-            d = self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>")
+            d = self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>") 
             d.addCallback(_testError)
-            reactor.callLater(1, self.server_protocol.triggerChallenge)
-
+            reactor.callLater(1.1, self.server_protocol.triggerChallenge)
             return d
             
         BOSH_XML = """<body content='text/xml; charset=utf-8'
@@ -335,13 +251,12 @@ class XEP0124TestCase(unittest.TestCase):
       to='localhost'
       route='xmpp:127.0.0.1:5222'
       ver='1.6'
-      wait='3'
+      wait='15'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
  """ % (self.rid,)
-
-        self.server_factory.protocol.delay_features = 10
+        self.server_factory.protocol.delay_features = 3
 
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
         # NOTE : to trigger this bug there needs to be 0 waiting requests.
@@ -392,56 +307,9 @@ class XEP0124TestCase(unittest.TestCase):
  """ % (self.rid,)
 
         self.server_factory.protocol.delay_features = 10
-
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
         # NOTE : to trigger this bug there needs to be 0 waiting requests.
         
         return d
         
 
-    def _error(self, e):
-        # self.fail(e)
-        pass
-
-    def _cleanPending(self):
-        pending = reactor.getDelayedCalls()
-        if pending:
-            for p in pending:
-                if p.active():
-                    p.cancel()
-
-    def _cleanSelectables(self):
-        removedSelectables = reactor.removeAll()
-        # Below is commented out to remind us how to see what selectable is sticking around
-        #if removedSelectables:
-        #    for sel in removedSelectables:
-        #        # del sel
-        #        print sel.__class__
-        #        print dir(sel)
-        
-    def tearDown(self):
-        def cbStopListening(result=None):
-            
-            self.root = None
-            self.site = None
-            self.proxy.factory.stopFactory()
-            self.server_factory.stopFactory()            
-            self.server = None
-            self._cleanPending()
-            self._cleanSelectables()
-
-        os.rmdir("./html") # remove directory from _trial_temp
-        self.b.service.poll_timeouts.stop()
-        self.b.service.stopService()
-        self.p.stopListening()
-        for s in self.b.service.sessions.keys():
-            self.b.service.endSession(self.b.service.sessions[s])
-        if hasattr(self.proxy.factory,'client'):
-            self.proxy.factory.client.transport.stopConnecting()
-        
-
-        d = defer.maybeDeferred(self.server.stopListening)
-        d.addCallback(cbStopListening)
-
-        return d
-        
