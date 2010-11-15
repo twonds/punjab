@@ -39,6 +39,29 @@ class HttpbElementStream(domish.ExpatElementStream):
     add rawXml to the elements
     """
 
+    def __init__(self, prefixes=None):
+        domish.ExpatElementStream.__init__(self)
+        self.prefixes = {}
+        if prefixes:
+            self.prefixes.update(prefixes)
+        self.prefixes.update(domish.G_PREFIXES)
+        self.prefixStack = [domish.G_PREFIXES.values()] 
+        self.prefixCounter = 0
+
+
+    def getPrefix(self, uri):
+        if not self.prefixes.has_key(uri):
+            self.prefixes[uri] = "xn%d" % (self.prefixCounter)
+            self.prefixCounter = self.prefixCounter + 1
+        return self.prefixes[uri]
+
+    def prefixInScope(self, prefix):
+        stack = self.prefixStack
+        for i in range(-1, (len(self.prefixStack)+1) * -1, -1):
+            if prefix in stack[i]:
+                return True
+        return False
+
     def _onStartElement(self, name, attrs):
         # Generate a qname tuple from the provided name
         attr_str   = ''
@@ -67,15 +90,25 @@ class HttpbElementStream(domish.ExpatElementStream):
 
 
         # Process attributes
+        
         for k, v in attrs.items():
             if k.find(" ") != -1:
-                aqname = k.split(" ")
+                aqname = k.split(" ")                
                 attrs[(aqname[0], aqname[1])] = v
-                attr_str = attr_str + " xmlns:"+aqname[0] + "='" + aqname[1] + "'" 
+                
+                attr_prefix = self.getPrefix(aqname[0])
+                if not self.prefixInScope(attr_prefix):
+                    attr_str = attr_str + " xmlns:%s='%s'" % (attr_prefix, 
+                                                              aqname[0])
+                    self.prefixStack[-1].append(attr_prefix)
+                attr_str = attr_str + " %s:%s='%s'" % (attr_prefix, 
+                                                       aqname[1],
+                                                       domish.escapeToXml(v, 
+                                                                          True))
                 del attrs[k]
-
-            v = domish.escapeToXml(v, True)
-            attr_str = attr_str + " " + k + "='" + v + "'" 
+            else:
+                v = domish.escapeToXml(v, True)
+                attr_str = attr_str + " " + k + "='" + v + "'" 
 
         raw_xml = raw_xml % (attr_str,)
         

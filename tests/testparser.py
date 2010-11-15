@@ -94,6 +94,14 @@ class ParseTestCase(unittest.TestCase):
 
         self.failUnless(e[0]==u"<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>", 'invalid xml')
 
+    def testPrefixesLang(self):
+        XML = """<body rid='384852951' xmlns='http://jabber.org/protocol/httpbind' sid='e46501b24abd334c062598498a8e02ba'><message xml:lang='fr' to='test@test.com'><body>test</body></message></body>"""
+
+        hp = HttpbParse()
+
+        b, e = hp.parse(XML)
+        self.failUnless(e[0]==u"<message to='test@test.com' xml:lang='fr'><body>test</body></message>", 'invalid xml')
+
 
 
     def testEscapedCDATA(self):
