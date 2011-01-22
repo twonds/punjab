@@ -1,3 +1,13 @@
+== Fri Jan 21, 2011 ==
+
+Add support for session pausing (Valérian Saliou xmpp:vanaryon@jappix.com)
+
+Add valid xml:lang to <stream /> (Valérian Saliou xmpp:vanaryon@jappix.com)
+
+Add session counter (Valérian Saliou xmpp:vanaryon@jappix.com)
+
+== Unknown date ==
+
 Fix stream:error namespace bug (Garret Heaton <powdahound@gmail.com>)
 
 Add whitelist command line option. (Garret Heaton <powdahound@gmail.com>)

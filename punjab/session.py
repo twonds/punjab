@@ -211,7 +211,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 if self.route.startswith("//"):
                     self.route = self.route[2:]
 
-                # route format change, see http://www.xmpp.org/extensions/xep-0124.html#session-request
+                # route format change, see http://xmpp.org/extensions/xep-0124.html#session-request
                 rhostname, rport = self.route.split(":")
                 self.port = int(rport)
                 self.hostname = rhostname
@@ -334,6 +334,15 @@ class Session(jabber.JabberClientFactory, server.Session):
         
                 
         return defer.succeed(self.elems)
+    
+    def pause(seconds = None):
+        """Pauses the session."""
+        if self.verbose:
+            log.msg('SESSION -> Pause')
+        
+        # TODO
+        
+        return seconds
 
     def poll(self, d = None, rid = None):
         """Handles the responses to requests.

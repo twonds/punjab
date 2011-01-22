@@ -350,11 +350,8 @@ class Httpb(resource.Resource):
         """
         request.setHeader('Access-Control-Allow-Origin', '*')
         request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-        return """<html>
-                 <body>
-                 <a href='http://www.xmpp.org/extensions/xep-0124.html'>XEP-0124</a> - BOSH
-                 </body>
-               </html>"""
+        html = "<html><body><h1><a href='https://github.com/twonds/punjab'>Punjab</a></h1><h3><a href='http://xmpp.org/extensions/xep-0124.html'>XEP-0124</a>: Bidirectional-streams Over Synchronous HTTP (BOSH)</h3><p>" + str(len(self.service.sessions)) + " active sessions</p></body></html>"
+        return html
 
     def render_POST(self, request):
         """
@@ -685,7 +682,7 @@ class HttpbService(punjab.Service):
                     log.msg('session does not exist?')
                 return None, defer.fail(error.NotFound)
             ##  XXX this seems to break xmpp:restart='true'  --vargas
-            ##  (cf. http://www.xmpp.org/extensions/xep-0206.html#preconditions-sasl [Example 10])
+            ##  (cf. http://xmpp.org/extensions/xep-0206.html#preconditions-sasl [Example 10])
 ##            if body.hasAttribute('to') and body['to']!='':
 ##                return s, defer.fail(error.BadRequest)
             
@@ -786,6 +783,9 @@ class HttpbService(punjab.Service):
         if body_tag.hasAttribute('type') and \
            body_tag['type'] == 'terminate':
             d = session.terminate()
+        elif body_tag.hasAttribute('pause') and \
+           body_tag['pause'] != '':
+            d = session.pause(body_tag['pause'])
         elif not dont_poll:
             # normal request
             d = session.poll(d, rid = int(body_tag['rid']))

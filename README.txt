@@ -1,4 +1,4 @@
-Copyright (C) 2001-2010 Christopher Zorn , tofu@thetofu.com
+Copyright (C) 2001-2011 Christopher Zorn , tofu@thetofu.com
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -28,3 +28,4 @@ CONTRIBUTORS
 
 Jack Moffitt xmpp:jackm@jabber.org - Improved HTTP Binding and Polling
 Garret Heaton <powdahound@gmail.com> - Whitelist improvements and bugfixes.
+Valérian Saliou xmpp:vanaryon@jappix.com - Added support for session pausing and fixed some stuffs.
