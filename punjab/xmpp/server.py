@@ -143,9 +143,9 @@ class XMPPServerProtocol(xmlstream.XmlStream):
         
         """
         if self.delay_features == 0:
-            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'><stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""" % (ns.NS_CLIENT, self.host, self.id,))
+            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0'><stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""" % (ns.NS_CLIENT, self.host, self.id,))
         else:
-            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'>""" % (ns.NS_CLIENT, self.host, self.id,))
+            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0'>""" % (ns.NS_CLIENT, self.host, self.id,))
             reactor.callLater(self.delay_features, self.send, """<stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""")
 
     def streamEnded(self, elm):

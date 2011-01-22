@@ -130,7 +130,7 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
         
         if self.version != 0.0:
             sh = "<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' version='%s' to='%s'>" % \
-                 (self.namespace,self.version, self.streamHost.encode('utf-8'))
+                 (self.namespace, self.version, self.streamHost.encode('utf-8'),)
 
             self.xmlstream.send(str(sh))
                                                                                                                 

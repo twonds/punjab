@@ -350,7 +350,7 @@ class Httpb(resource.Resource):
         """
         request.setHeader('Access-Control-Allow-Origin', '*')
         request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-        html = "<html><body><h1><a href='https://github.com/twonds/punjab'>Punjab</a></h1><h3><a href='http://xmpp.org/extensions/xep-0124.html'>XEP-0124</a>: Bidirectional-streams Over Synchronous HTTP (BOSH)</h3><p>" + str(len(self.service.sessions)) + " active sessions</p></body></html>"
+        html = "<html><body><h1><a href='https://github.com/twonds/punjab'>Punjab</a></h1><h3><a href='http://xmpp.org/extensions/xep-0124.html'>XEP-0124</a>: Bidirectional-streams Over Synchronous HTTP (BOSH)</h3><p>" + str(len(self.service.sessions)) + " active session(s)</p></body></html>"
         return html
 
     def render_POST(self, request):
