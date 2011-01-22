@@ -1,8 +1,10 @@
-== Fri Jan 21, 2011 ==
+== Sun Jan 23, 2011 ==
 
 Add support for session pausing (Valérian Saliou xmpp:vanaryon@jappix.com)
 
 Add valid xml:lang to <stream /> (Valérian Saliou xmpp:vanaryon@jappix.com)
+
+== Fri Jan 21, 2011 ==
 
 Add session counter (Valérian Saliou xmpp:vanaryon@jappix.com)
 
