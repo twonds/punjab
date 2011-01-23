@@ -647,9 +647,9 @@ class Session(jabber.JabberClientFactory, server.Session):
         # send this so we do not timeout from servers
         if getattr(self, 'xmlstream', None):
             self.xmlstream.send(' ')
-        if self.paused is True:
-            wait = self.pause
-        elif self.inactivity is None:
+        # if self.paused is True:
+            # wait = self.pause
+        if self.inactivity is None:
             wait = 900
         elif self.inactivity == 0:
             wait = time.time()
