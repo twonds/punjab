@@ -335,14 +335,15 @@ class Session(jabber.JabberClientFactory, server.Session):
                 
         return defer.succeed(self.elems)
     
-    def pause(seconds = None):
+    def pause(self, sec = None):
         """Pauses the session."""
+        self.pause = int(sec)
+        self.paused = True
+        
         if self.verbose:
             log.msg('SESSION -> Pause')
         
-        # TODO
-        
-        return seconds
+        return sec
 
     def poll(self, d = None, rid = None):
         """Handles the responses to requests.
@@ -646,7 +647,9 @@ class Session(jabber.JabberClientFactory, server.Session):
         # send this so we do not timeout from servers
         if getattr(self, 'xmlstream', None):
             self.xmlstream.send(' ')
-        if self.inactivity is None:
+        if self.paused is True:
+            wait = self.pause
+        elif self.inactivity is None:
             wait = 900
         elif self.inactivity == 0:
             wait = time.time()
