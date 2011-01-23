@@ -133,7 +133,7 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
                  (self.namespace, self.version, self.streamHost.encode('utf-8'),)
 
             self.xmlstream.send(str(sh))
-                                                                                                                
+
 
     def sendAuth(self, jid, passwd, callback, errback = None):
         self.jid    = jid

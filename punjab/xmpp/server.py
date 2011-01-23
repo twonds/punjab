@@ -41,7 +41,7 @@ class IQAuthFeature(object):
     
     
     def associateWithStream(self, xs):
-        """Add a streamm start event observer. 
+        """Add a stream start event observer. 
            And do other things to associate with the xmlstream if necessary.
         """
         self.xmlstream = xs
