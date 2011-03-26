@@ -568,6 +568,7 @@ class HttpbService(punjab.Service):
     implements(IHttpbService)
 
     white_list = []
+    black_list = []
 
     def __init__(self, 
                  verbose = 0, polling = 15, 
@@ -621,6 +622,9 @@ class HttpbService(punjab.Service):
         #
         # e.g.: A 'to' of 'foo.example.com' would not match 'example.com' but
         #       would match '.example.com' or '*example.com' or '*.example.com'
+        #
+        # Or target must not be in black_list. If neither white_list or
+        # black_list is present, target is always allowed.
         if self.white_list:
             valid_host = False
             for domain in self.white_list:
@@ -632,6 +636,21 @@ class HttpbService(punjab.Service):
                         (domain[0] == '.' and \
                              body['to'].endswith(domain[1:])):
                     valid_host = True
+                    break
+            if not valid_host:
+                return None, defer.fail(error.BadRequest)
+
+        if self.black_list:
+            valid_host = True
+            for domain in self.black_list:
+                if body['to'] == domain or \
+                        (domain[0] == '*' and domain[1] == '.' and
+                         body['to'].endswith(domain[2:])) or \
+                        (domain[0] == '*' and \
+                         body['to'].endswith(domain[1:])) or \
+                        (domain[0] == '.' and \
+                         body['to'].endswith(domain[1:])):
+                    valid_host = False
                     break
             if not valid_host:
                 return None, defer.fail(error.BadRequest)

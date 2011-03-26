@@ -6,13 +6,18 @@ from punjab.httpb  import Httpb, HttpbService
 
 root = static.File("./html")
 
+# uncomment only one of the bosh lines, use_raw does no xml
+# parsing/serialization but is potentially less reliable
+#bosh = HttpbService(1, use_raw=True)
+bosh = HttpbService(1)
 
-#b = resource.IResource(HttpbService(1, use_raw=True))
-b = resource.IResource(HttpbService(1))
 # You can limit servers with a whitelist. 
 # The whitelist is a list of strings to match domain names.
-# b.white_list = ['jabber.org', 'thetofu.com']
-root.putChild('http-bind', b)
+# bosh.white_list = ['jabber.org', 'thetofu.com']
+# or a black list
+# bosh.block_list = ['jabber.org', '.thetofu.com']
+
+root.putChild('http-bind', resource.IResource(bosh))
 
 
 site  = server.Site(root)
