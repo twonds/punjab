@@ -76,6 +76,9 @@ def makeService(config):
     if config['white_list']:
         httpb.HttpbService.white_list = config['white_list'].split(',')
 
+    if config['black_list']:
+        httpb.HttpbService.black_list = config['black_list'].split(',')
+
     if config['httpb']:
         b = httpb.HttpbService(config['verbose'], config['polling'])
         if config['httpb'] == '':

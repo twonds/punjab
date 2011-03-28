@@ -16,6 +16,10 @@ class Options(usage.Options):
             'Comma separated list of domains to allow connections to. \
             Begin an entry with a period to allow connections to subdomains. \
             e.g.: --white_list=.example.com,domain.com'),
+        ('black_list', None, None,
+         'Comma separated list of domains to deny connections to. ' \
+         'Begin an entry with a period to deny connections to subdomains. '\
+         'e.g.: --black_list=.example.com,domain.com'),
     ]
 
     optFlags = [
