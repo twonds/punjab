@@ -1,5 +1,5 @@
 from twisted.internet import defer, protocol, reactor, stdio
-from twisted.python import log, reflect
+from twisted.python import log, reflect, failure
 try:
     from twisted.words.xish import domish, utility
 except:
@@ -50,6 +50,19 @@ class NotAuthorized(Error):
 
 class NotImplemented(Error):
     pass
+
+
+
+# Exceptions raised by the client.
+class HTTPBException(Exception): pass
+class HTTPBNetworkTerminated(HTTPBException):
+    def __init__(self, body_tag, elements):
+        self.body_tag = body_tag
+        self.elements = elements
+
+    def __str__(self):
+        return self.body_tag.toXml()
+
 
 
 class XMPPAuthenticator(client.XMPPAuthenticator):
@@ -157,10 +170,11 @@ class QueryFactory(protocol.ClientFactory):
             raise
         else:
             if body_tag.hasAttribute('type') and body_tag['type'] == 'terminate':
+                error = failure.Failure(HTTPBNetworkTerminated(body_tag, elements))
                 if self.deferred.called:
-                    return defer.fail((body_tag,elements))
+                    return defer.fail(error)
                 else:            
-                    self.deferred.errback((body_tag,elements))
+                    self.deferred.errback(error)
                 return
             if self.deferred.called:
                 return defer.succeed((body_tag,elements))

@@ -196,9 +196,10 @@ class XEP0124TestCase(test_basic.TestCase):
         """
         
         def _testStreamError(res):
-            self.failUnless(res.value[0].hasAttribute('condition'), 'No attribute condition')
-            self.failUnless(res.value[0]['condition'] == 'remote-stream-error', 'Condition should be remote stream error')
-            self.failUnless(res.value[1][0].children[0].name == 'policy-violation', 'Error should be policy violation')
+            self.failUnless(isinstance(res.value, httpb_client.HTTPBNetworkTerminated), "Got an exception that wasn't HTTPBNetworkTerminated")
+            self.failUnless(res.value.body_tag.hasAttribute('condition'), 'No attribute condition')
+            self.failUnlessEqual(res.value.body_tag['condition'], 'remote-stream-error')
+            self.failUnlessEqual(res.value.elements[0].children[0].name, 'policy-violation')
 
 
 
