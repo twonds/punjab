@@ -4,7 +4,7 @@ Punjab - multiple http interfaces to jabber.
 """
 from twisted.python import log
 from twisted.application import service
-import twisted_patches
+import patches
 
 
 def uriCheck(elem, uri):

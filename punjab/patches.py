@@ -5,7 +5,7 @@ import functools
 def patch(cls, attr):
     """Patch the function named attr in the object cls with the decorated function."""
     orig_func = getattr(cls, attr)
-    @wraps(orig_func)
+    @functools.wraps(orig_func)
     def decorator(func):
         def wrapped_func(*args, **kwargs):
             return func(orig_func, *args, **kwargs)
