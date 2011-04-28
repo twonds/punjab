@@ -517,11 +517,7 @@ class Session(jabber.JabberClientFactory, server.Session):
     def streamError(self, streamerror):
         """called when we get a stream:error stanza"""
         
-        try: # a workaround for a bug in twisted.words.protocols.jabber.error
-            err_elem = streamerror.value.getElement()
-            err_elem.toXml()
-        except: # no matter what the exception we just return None
-            err_elem = None
+        err_elem = getattr(streamerror.value, "element")
 
         e = self.buildRemoteError(err_elem)
         do_expire = True
