@@ -52,7 +52,8 @@ class TestCase(unittest.TestCase):
         
         self.server_service = xmppserver.XMPPServerService()
         self.server_factory = xmppserver.IXMPPServerFactory(self.server_service)
-        self.server = reactor.listenTCP(5222, self.server_factory, interface="127.0.0.1")
+        self.server = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")
+        self.server_port = self.server.socket.getsockname()[1]
 
         # Hook the server's buildProtocol to make the protocol instance
         # accessible to tests.

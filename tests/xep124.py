@@ -42,13 +42,14 @@ class XEP0124TestCase(test_basic.TestCase):
       hold='1'
       rid='1573741820'
       to='localhost'
+      route='xmpp:127.0.0.1:%(server_port)i'
       secure='true'
       ver='1.6'
       wait='60'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """
+ """% { "server_port": self.server_port }
 
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
         d.addErrback(_error)
@@ -73,13 +74,14 @@ class XEP0124TestCase(test_basic.TestCase):
       hold='1'
       rid='1573741820'
       to='localhost'
+      route='xmpp:127.0.0.1:%(server_port)i'
       secure='true'
       ver='1.6'
       wait='60'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """
+ """% { "server_port": self.server_port }
         
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
         d.addErrback(_error)
@@ -166,16 +168,16 @@ class XEP0124TestCase(test_basic.TestCase):
 
         BOSH_XML = """<body content='text/xml; charset=utf-8'
       hold='1'
-      rid='%d'
+      rid='%(rid)i'
       to='localhost'
-      route='xmpp:127.0.0.1:5222'
+      route='xmpp:127.0.0.1:%(server_port)i'
       ver='1.6'
       wait='10'
       ack='1'
       inactivity='10'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """% (self.rid,)
+ """% { "rid": self.rid, "server_port": self.server_port }
 
         self.proxy.connect(BOSH_XML).addCallback(testSessionCreate)
         d.addErrback(self.fail)
@@ -209,15 +211,15 @@ class XEP0124TestCase(test_basic.TestCase):
             
         BOSH_XML = """<body content='text/xml; charset=utf-8'
       hold='1'
-      rid='%d'
+      rid='%(rid)i'
       to='localhost'
-      route='xmpp:127.0.0.1:5222'
+      route='xmpp:127.0.0.1:%(server_port)i'
       ver='1.6'
       wait='60'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """ % (self.rid,)
+ """% { "rid": self.rid, "server_port": self.server_port }
 
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
 
@@ -247,15 +249,15 @@ class XEP0124TestCase(test_basic.TestCase):
             
         BOSH_XML = """<body content='text/xml; charset=utf-8'
       hold='1'
-      rid='%d'
+      rid='%(rid)i'
       to='localhost'
-      route='xmpp:127.0.0.1:5222'
+      route='xmpp:127.0.0.1:%(server_port)i'
       ver='1.6'
       wait='15'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """ % (self.rid,)
+ """% { "rid": self.rid, "server_port": self.server_port }
         self.server_factory.protocol.delay_features = 3
 
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
@@ -296,15 +298,15 @@ class XEP0124TestCase(test_basic.TestCase):
             
         BOSH_XML = """<body content='text/xml; charset=utf-8'
       hold='1'
-      rid='%d'
+      rid='%(rid)i'
       to='localhost'
-      route='xmpp:127.0.0.1:5222'
+      route='xmpp:127.0.0.1:%(server_port)i'
       ver='1.6'
       wait='3'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """ % (self.rid,)
+ """% { "rid": self.rid, "server_port": self.server_port }
 
         self.server_factory.protocol.delay_features = 10
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
