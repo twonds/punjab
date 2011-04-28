@@ -580,7 +580,6 @@ class HttpbService(punjab.Service):
             self.make_session = make_session
         self.v  = verbose
         self.sessions = {}
-        self.counter  = 0
         self.polling = polling
         # self.expired  = {}
         self.use_raw  = use_raw

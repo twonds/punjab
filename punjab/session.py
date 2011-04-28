@@ -14,8 +14,7 @@ except ImportError:
 
 
 import traceback
-import random
-import md5
+import os
 from punjab import jabber
 from punjab.xmpp import ns
 
@@ -61,9 +60,8 @@ def make_session(pint, attrs, session_type='BOSH'):
     attrs - attributes sent from the body tag
     """    
 
-    # this may need some work, idea, code taken from twisted.web.server
-    pint.counter = pint.counter + 1
-    sid  = md5.new("%s_%s_%s" % (str(time.time()), str(random.random()) , str(pint.counter))).hexdigest()
+    sid  = os.urandom(20)
+    sid = "".join("%02x" % ord(i) for i in sid)
 
 
     s    = Session(pint, sid, attrs)
