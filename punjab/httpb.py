@@ -13,7 +13,7 @@ try:
 except ImportError:
     from twisted.xish import domish
 
-import sha, time
+import hashlib, time
 import error
 from session import make_session
 import punjab
@@ -719,8 +719,7 @@ class HttpbService(punjab.Service):
             try:
                 if body.hasAttribute('key') and not foundNewKey:
                     if s.key is not None:
-                        nk = sha.new(body['key'])
-                        key = nk.hexdigest()
+                        key = hashlib.sha1(body['key']).hexdigest()
                         next_key = body['key']
                         if key == s.key:
                             s.key = next_key
