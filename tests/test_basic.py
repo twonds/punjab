@@ -152,6 +152,7 @@ class TestCase(unittest.TestCase):
                 self.b.service.endSession(sess)
         if hasattr(self.proxy.factory,'client'):
             self.proxy.factory.client.transport.stopConnecting()
+        self.server_factory.protocol.delay_features = 0
         
 
         d = defer.maybeDeferred(self.server.stopListening)
