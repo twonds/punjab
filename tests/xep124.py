@@ -96,20 +96,27 @@ class XEP0124TestCase(test_basic.TestCase):
             self.fail("Session should not be created")
             
         def _error(e):
-            return True
+            # This is the error we expect.
+            if isinstance(e.value, ValueError) and e.value.args == ('400', 'Bad Request'):
+                return True
+
+            # Any other error, including the error raised from _testSessionCreate, should
+            # be propagated up to the test runner.
+            return e
             
         self.hbs.white_list = ['test']
         BOSH_XML = """<body content='text/xml; charset=utf-8'
       hold='1'
       rid='1573741820'
       to='localhost'
+      route='xmpp:127.0.0.1:%(server_port)i'
       secure='true'
       ver='1.6'
       wait='60'
       ack='1'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
- """
+ """% { "server_port": self.server_port }
         
         d = self.proxy.connect(BOSH_XML).addCallback(_testSessionCreate)
         d.addErrback(_error)
