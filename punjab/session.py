@@ -298,10 +298,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         if 'onExpire' in dir(self.pint):
             self.pint.onExpire(self.sid)
         if self.verbose and not getattr(self, 'terminated', False):
-            log.msg(self.sid)
-            log.msg(self.rid)
-            log.msg(self.waiting_requests)
-            log.msg('SESSION -> We have expired')
+            log.msg('SESSION -> We have expired', self.sid, self.rid, self.waiting_requests)
         self.disconnect()
     
     def terminate(self):
@@ -538,9 +535,9 @@ class Session(jabber.JabberClientFactory, server.Session):
     def connectError(self, xs):
         """called when we get disconnected"""
         
-        # FIXME: we should really only send the error event back if
-        # attempts to reconnect fail.  There's no reason temporary
-        # connection failures should be exposed upstream
+        # If the connection was established and lost, then we need to report the error
+        # back to the client, since he needs to reauthenticate.  FIXME: If the connection was
+        # lost before anything happened, we could silently retry instead.
         if self.verbose:
             log.msg('connect ERROR')
             try:
@@ -549,17 +546,28 @@ class Session(jabber.JabberClientFactory, server.Session):
             except:
                 pass
             
+
+        self.stopTrying()
+
+        e = error.Error('remote-connection-failed')
+
+        do_expire = True
+
         if self.waiting_requests:
-                        
-            if len(self.waiting_requests) > 0:
-                wr = self.waiting_requests.pop(0)
-                wr.doErrback(error.Error('remote-connection-failed'))
+            wr = self.waiting_requests.pop(0)
+            wr.doErrback(e)
+        else: # need to wait for a new request and then expire
+            do_expire = False
 
         if self.pint and self.pint.sessions.has_key(self.sid):
-            try:
-                self.expire()
-            except:
-                self.onExpire()
+            if do_expire:
+                try:
+                    self.expire()
+                except:
+                    self.onExpire()
+            else:
+                s = self.pint.sessions.get(self.sid)
+                s.stream_error = e
 
 
     def sendRawXml(self, obj):
