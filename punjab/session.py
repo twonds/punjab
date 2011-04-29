@@ -25,6 +25,10 @@ import error
 try:
     from twisted.internet import ssl
 except ImportError:
+    ssl = None
+if ssl and not ssl.supported:
+    ssl = None
+if not ssl:
     log.msg("SSL ERROR: You do not have ssl support this may cause problems with tls client connections.")
 
 
@@ -44,12 +48,12 @@ class XMPPClientConnector(SRVConnector):
         """
         host, port = SRVConnector.pickServer(self)
 
-        if port == 5223 and xmlstream.ssl:
-            context = xmlstream.ssl.ClientContextFactory()
-            context.method = xmlstream.ssl.SSL.SSLv23_METHOD
+        if port == 5223 and ssl:
+            context = ssl.ClientContextFactory()
+            context.method = ssl.SSL.SSLv23_METHOD
             
-            self.connectFunc = 'connectSSL'
-            self.connectFuncArgs = (context)
+            self.connectFuncName = 'connectSSL'
+            self.connectFuncArgs = (context,)
         return host, port
 
 def make_session(pint, attrs, session_type='BOSH'):
