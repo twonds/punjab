@@ -61,28 +61,9 @@ def make_session(pint, attrs, session_type='BOSH'):
     attrs - attributes sent from the body tag
     """    
 
-    sid  = os.urandom(20)
-    sid = "".join("%02x" % ord(i) for i in sid)
 
-
-    s    = Session(pint, sid, attrs)
+    s    = Session(pint, attrs)
     
-    s.addBootstrap(xmlstream.STREAM_START_EVENT, s.streamStart)
-    s.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, s.connectEvent)
-    s.addBootstrap(xmlstream.STREAM_ERROR_EVENT, s.streamError)
-    s.addBootstrap(xmlstream.STREAM_END_EVENT, s.connectError)    
-    
-    s.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
-    
-    s.secure = 0
-    s.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
-    
-    if attrs.has_key('secure') and attrs['secure'] == 'true':
-        s.secure = 1
-        s.authenticator.useTls = 1
-    else:
-        s.authenticator.useTls = 0
-
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
         
@@ -99,7 +80,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     # timeout
     reactor.callLater(s.inactivity, s.checkExpired)
 
-    pint.sessions[sid] = s
+    pint.sessions[s.sid] = s
     
     return s, s.waiting_requests[0].deferred
     
@@ -127,7 +108,7 @@ class WaitingRequest(object):
 
 class Session(jabber.JabberClientFactory, server.Session):
     """ Jabber Client Session class for client XMPP connections. """
-    def __init__(self, pint, sid, attrs):
+    def __init__(self, pint, attrs):
         """
         Initialize the session
         """
@@ -149,11 +130,12 @@ class Session(jabber.JabberClientFactory, server.Session):
             else:
                 self.port = 5222
         
+        self.sid = "".join("%02x" % ord(i) for i in os.urandom(20))
+
         jabber.JabberClientFactory.__init__(self, self.to, pint.v)
-        server.Session.__init__(self, pint, sid)
+        server.Session.__init__(self, pint, self.sid)
         self.pint  = pint
 
-        self.sid   = sid
         self.attrs = attrs
         self.s     = None
 
@@ -166,7 +148,6 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.raw_buffer = u""
         self.xmpp_node  = ''       
         self.success    = 0        
-        self.secure     = 0
         self.mechanisms = []
         self.xmlstream  = None
         self.features   = None
@@ -183,6 +164,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.wait  = int(attrs.get('wait', 0))            
 
         self.hold  = int(attrs.get('hold', 0))
+        self.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
 
         if attrs.has_key('window'):
             self.window  = int(attrs['window'])
@@ -202,6 +184,11 @@ class Session(jabber.JabberClientFactory, server.Session):
         else:
             self.hostname = self.to
             
+        self.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
+
+        self.secure = attrs.has_key('secure') and attrs['secure'] == 'true'
+        self.authenticator.useTls = self.secure
+
         if attrs.has_key('route'):
             if attrs['route'].startswith("xmpp:"):
                 self.route = attrs['route'][5:]
@@ -226,6 +213,11 @@ class Session(jabber.JabberClientFactory, server.Session):
         if pint.v:
             log.msg('Session Created : %s %s' % (str(self.sid),str(time.time()), ))
         
+        self.addBootstrap(xmlstream.STREAM_START_EVENT, self.streamStart)
+        self.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, self.connectEvent)
+        self.addBootstrap(xmlstream.STREAM_ERROR_EVENT, self.streamError)
+        self.addBootstrap(xmlstream.STREAM_END_EVENT, self.connectError)
+
         # create the first waiting request
         d = defer.Deferred()
         timeout = 30
@@ -446,7 +438,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 
         # There is a tls initializer added by us, if it is available we need to try it
         if len(initializers)>0 and starttls:
-            self.secure = 1
+            self.secure = True
 
         if self.authid is None:
             self.authid = self.xmlstream.sid
