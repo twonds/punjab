@@ -710,7 +710,7 @@ class HttpbService(punjab.Service):
             if bool(s.key) != body.hasAttribute('key'):
                 # This session is keyed, but there's no key in this packet; or there's
                 # a key in this packet, but the session isn't keyed.
-                return s, defer.fail(error.NotFound)
+                return s, defer.fail(error.Error('item-not-found'))
             
             # If this session is keyed, validate the next key.
             if s.key:
@@ -719,7 +719,7 @@ class HttpbService(punjab.Service):
                 if key != s.key:
                     if self.v:
                         log.msg('Error in key')
-                    return s, defer.fail(error.NotFound)
+                    return s, defer.fail(error.Error('item-not-found'))
                 s.key = next_key
 
             # If there's a newkey in this packet, save it.  Do this after validating the

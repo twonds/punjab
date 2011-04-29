@@ -244,8 +244,8 @@ class XEP0124TestCase(test_basic.TestCase):
 
         try:
             yield self.proxy.send(self.get_body_node(useKey=False))
-        except ValueError as e:
-            self.failUnlessEqual(e.args[0], '404')
+        except httpb_client.HTTPBNetworkTerminated as e:
+            self.failUnlessEqual(e.body_tag.getAttribute('condition', None), 'item-not-found')
         else:
             self.fail("Expected 404 Not Found")
 
@@ -257,8 +257,8 @@ class XEP0124TestCase(test_basic.TestCase):
 
         try:
             yield self.proxy.send(self.get_body_node(useKey=True, key='0'*40))
-        except ValueError as e:
-            self.failUnlessEqual(e.args[0], '404')
+        except httpb_client.HTTPBNetworkTerminated as e:
+            self.failUnlessEqual(e.body_tag.getAttribute('condition', None), 'item-not-found')
         else:
             self.fail("Expected 404 Not Found")
 
@@ -270,8 +270,8 @@ class XEP0124TestCase(test_basic.TestCase):
 
         try:
             yield self.proxy.send(self.get_body_node(key='0'*40))
-        except ValueError as e:
-            self.failUnlessEqual(e.args[0], '404')
+        except httpb_client.HTTPBNetworkTerminated as e:
+            self.failUnlessEqual(e.body_tag.getAttribute('condition', None), 'item-not-found')
         else:
             self.fail("Expected 404 Not Found")
 

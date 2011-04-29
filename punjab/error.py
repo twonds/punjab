@@ -61,6 +61,7 @@ conditions = {
     'see-other-uri':	{'code': '200', 'type': 'terminate'},
     'system-shutdown':	{'code': '200', 'type': 'terminate'},
     'undefined-condition':	{'code': '200', 'type': 'terminate'},
+    'item-not-found':		{'code': '200', 'type': 'terminate'},
     
 }
 
