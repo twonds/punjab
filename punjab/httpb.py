@@ -760,24 +760,21 @@ class HttpbService(punjab.Service):
     def _parse(self, session, body_tag, xmpp_elements):
         # increment the request counter
         session.rid  = session.rid + 1
-        dont_poll = False
-        d = None
         
         if getattr(session, 'stream_error', None) != None:
-            # set up waiting request
+            # The server previously sent us a stream:error, and has probably closed
+            # the connection by now.  Forward the error to the client and terminate
+            # the session.
             d = defer.Deferred()            
             d.errback(session.stream_error)
             session.elems = []
             session.terminate()
+            return d
 
-            dont_poll = True
-        else:
-            # send all the elements
-            for el in xmpp_elements:
-                if not isinstance(el, domish.Element):
-                    session.sendRawXml(el)
-                    continue
-            
+        # Send received elements from the client to the server.  Do this even for
+        # type='terminate'.
+        for el in xmpp_elements:
+            if isinstance(el, domish.Element):
                 # something is wrong here, need to figure out what
                 # the xmlns will be lost if this is not done
                 # punjab.uriCheck(el,NS_BIND)              
@@ -789,17 +786,15 @@ class HttpbService(punjab.Service):
                     el.uri = None
                 if el.defaultUri == NS_BIND:
                     el.defaultUri = None
-                    
-                session.sendRawXml(el)
+
+            session.sendRawXml(el)
 
         if body_tag.hasAttribute('type') and \
            body_tag['type'] == 'terminate':
-            d = session.terminate()
-        elif not dont_poll:
-            # normal request
-            d = session.poll(d, rid = int(body_tag['rid']))
-            
-        return d
+            return session.terminate()
+
+        # normal request
+        return session.poll(None, rid = int(body_tag['rid']))
         
     def _returnIq(self, cur_session, d, iq):
         """
