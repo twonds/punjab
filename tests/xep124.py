@@ -5,7 +5,7 @@ from twisted.trial import unittest
 import time
 from twisted.web import server, resource, static, http, client
 from twisted.words.protocols.jabber import jid
-from twisted.internet import defer, protocol, reactor
+from twisted.internet import defer, protocol, reactor, task
 from twisted.application import internet, service
 from twisted.words.xish import domish, xpath
 
@@ -125,36 +125,21 @@ class XEP0124TestCase(test_basic.TestCase):
     def testSessionTimeout(self):
         """Test if we timeout correctly
         """
-        d = defer.Deferred()
-
-        # If an error occurs within the current Deferred, propagate it to d.
-        def propagateError(e):
-            d.errback(e)
 
         def testTimeout(res):
-            passed = True
-            
-            if res.value[0]!='404':
-                passed = False
-                d.errback((Exception, 'Wrong Value %s '% (str(res.value),)))
-            if passed:
-                d.callback(True)
-            else:
-                log.err(res)
+            self.failUnlessEqual(res.value[0], '404')
 
         def testCBTimeout(res):
             # check for terminate if we expire 
             terminate = res[0].getAttribute('type',False)
             
-            if str(terminate) != 'terminate':
-                d.errback((Exception, 'Was not terminate'))
-                return
-            d.callback(True)
+            self.failUnlessEqual(terminate, 'terminate')
 
         def sendTest():
             sd = self.send()
             sd.addCallback(testCBTimeout)
             sd.addErrback(testTimeout)
+            return sd
             
 
         def testResend(res):
@@ -162,7 +147,7 @@ class XEP0124TestCase(test_basic.TestCase):
             s = self.b.service.sessions[self.sid]
             self.failUnless(s.inactivity==2,'Wrong inactivity value')
             self.failUnless(s.wait==2, 'Wrong wait value')
-            reactor.callLater(s.wait+s.inactivity+1, sendTest)
+            return task.deferLater(reactor, s.wait+s.inactivity+1, sendTest)
             
 
         def testSessionCreate(res):
@@ -173,7 +158,8 @@ class XEP0124TestCase(test_basic.TestCase):
             # send and wait 
             sd = self.send()
             
-            sd.addCallbacks(testResend, propagateError)
+            sd.addCallback(testResend)
+            return sd
             
 
 
@@ -190,9 +176,7 @@ class XEP0124TestCase(test_basic.TestCase):
       xmlns='http://jabber.org/protocol/httpbind'/>
  """% { "rid": self.rid, "server_port": self.server_port }
 
-        self.proxy.connect(BOSH_XML).addCallbacks(testSessionCreate, propagateError)
-        d.addErrback(self.fail)
-        return d
+        return self.proxy.connect(BOSH_XML).addCallbacks(testSessionCreate)
 
     def testStreamError(self):
         """
