@@ -189,7 +189,12 @@ class XEP0124TestCase(test_basic.TestCase):
 
             self.failUnless(res.value.body_tag.hasAttribute('condition'), 'No attribute condition')
             self.failUnlessEqual(res.value.body_tag['condition'], 'remote-stream-error')
-            self.failUnlessEqual(res.value.elements[0].children[0].name, 'policy-violation')
+
+            # The XML should exactly match the error XML sent by triggerStreamError().
+            self.failUnless(xpath.XPathQuery("/error[@attrib='1']").matches(res.value.elements[0]))
+            self.failUnless(xpath.XPathQuery("/error/policy-violation").matches(res.value.elements[0]))
+            self.failUnless(xpath.XPathQuery("/error/arbitrary-extension").matches(res.value.elements[0]))
+            self.failUnless(xpath.XPathQuery("/error/text[text() = 'Error text']").matches(res.value.elements[0]))
 
 
 
