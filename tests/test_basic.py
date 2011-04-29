@@ -73,14 +73,14 @@ class TestCase(unittest.TestCase):
 
 
     def key(self,b):
-        if self.keys.lastKey():
-            self.keys.setKeys()
-        
-        if self.keys.firstKey():
-            b['newkey'] = self.keys.getKey()
-        else:
-            b['key'] = self.keys.getKey()
-        return b 
+        key, newkey = self.keys.getKey()
+
+        if key:
+            b['key'] = key
+        if newkey:
+            b['newkey'] = newkey
+
+        return b
 
     def resend(self, ext = None):
         self.rid = self.rid - 1
@@ -105,7 +105,7 @@ class TestCase(unittest.TestCase):
             else:
                 b.addRawXml(ext)
 
-        b = self.key(b)
+        self.key(b)
         d = self.proxy.send(b)
         return d
 
