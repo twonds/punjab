@@ -44,9 +44,6 @@ class XMPPClientConnector(SRVConnector):
         """
         host, port = SRVConnector.pickServer(self)
 
-        if not self.servers and not self.orderedServers:
-            # no SRV record, fall back..
-            port = 5222
         if port == 5223 and xmlstream.ssl:
             context = xmlstream.ssl.ClientContextFactory()
             context.method = xmlstream.ssl.SSL.SSLv23_METHOD
