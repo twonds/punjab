@@ -212,7 +212,7 @@ class Keys:
         
     def _set_keys(self):
         seed = os.urandom(1024)
-        num_keys = 3 #random.randint(55,255)
+        num_keys = random.randint(55,255)
         self.k = [hashlib.sha1(seed).hexdigest()]
         for i in xrange(num_keys-1):
             self.k.append(hashlib.sha1(self.k[-1]).hexdigest())
