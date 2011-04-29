@@ -230,6 +230,28 @@ class XEP0124TestCase(test_basic.TestCase):
 
 
     @defer.inlineCallbacks
+    def testTerminateRace(self):
+        """Test that buffered messages are flushed when the connection is terminated."""
+        yield self.connect(self.get_body_node(connect=True))
+
+        def log_observer(event):
+            self.failIf(event['isError'], event)
+
+        log.addObserver(log_observer)
+
+        # Simultaneously cause a stream error (server->client closed) and send a terminate
+        # from the client to the server.  Both sides are closing the connection at once.
+        # Make sure the connection closes cleanly without logging any errors ("Unhandled
+        # Error"), and the client receives a terminate in response.
+        try:
+            self.server_protocol.triggerStreamError()
+            yield self.proxy.send(self.get_body_node(type='terminate'))
+        except httpb_client.HTTPBNetworkTerminated as e:
+            self.failUnlessEqual(e.body_tag.getAttribute('condition', None), 'remote-stream-error')
+        finally:
+            log.removeObserver(log_observer)
+
+    @defer.inlineCallbacks
     def testStreamKeying1(self):
         """Test that connections succeed when stream keying is active."""
 
