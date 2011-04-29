@@ -86,6 +86,41 @@ class TestCase(unittest.TestCase):
         self.rid = self.rid - 1
         return self.send(ext)
 
+    def get_body_node(self, ext=None, sid=None, rid=None, useKey=False, connect=False, **kwargs):
+        self.rid = self.rid + 1
+        if sid is None:
+            sid = self.sid
+        if rid is None:
+            rid = self.rid
+        b = domish.Element(("http://jabber.org/protocol/httpbind","body"))
+        b['content']  = 'text/xml; charset=utf-8'
+        b['hold'] = '0'
+        b['wait'] = '60'
+        b['ack'] = '1'
+        b['xml:lang'] = 'en'
+        b['rid'] = str(rid)
+
+        if sid:
+            b['sid'] = str(sid)
+
+        if connect:
+            b['to'] = 'localhost'
+            b['route'] = 'xmpp:127.0.0.1:%i' % self.server_port
+            b['ver'] = '1.6'
+
+        if useKey:
+            self.key(b)
+
+        if ext is not None:
+            if isinstance(ext, domish.Element):
+                b.addChild(ext)
+            else:
+                b.addRawXml(ext)
+
+        for key, value in kwargs.iteritems():
+            b[key] = value
+        return b
+
     def send(self, ext = None, sid = None, rid = None):
         self.rid = self.rid + 1
         if sid is None:
@@ -170,27 +205,4 @@ class TestCase(unittest.TestCase):
         d.addCallback(cbStopListening)
 
         return d
-        
-    def getBodyXML(self, **kwargs):
-        """
-        Return the <body/> XML used by most tests.
-        """
-        options = {
-            'rid': self.rid,
-            'wait': 60,
-            'ack': 1
-        }
-        for key, value in kwargs.iteritems():
-            options[key] = value
-        keys = ["%s='%s'" % (key, value) for key, value in options.iteritems()]
-        return """
-        <body content='text/xml; charset=utf-8'
-            hold='1'
-            to='localhost'
-            route='xmpp:127.0.0.1:%(server_port)i'
-            ver='1.6'
-            xml:lang='en'
-            %(keys)s
-            xmlns='http://jabber.org/protocol/httpbind'/>
-        """ % { 'server_port': self.server_port, 'keys': " ".join(keys)}
 

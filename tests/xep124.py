@@ -249,7 +249,7 @@ class XEP0124TestCase(test_basic.TestCase):
             self.server_protocol.triggerInvalidXML()
             return self.send().addCallbacks(_failStreamError, _testStreamError)
 
-        return self.proxy.connect(self.getBodyXML()).addCallback(_testSessionCreate)
+        return self.proxy.connect(self.get_body_node(connect=True)).addCallback(_testSessionCreate)
 
     def testFeaturesError(self):
         """
