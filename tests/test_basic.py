@@ -109,6 +109,17 @@ class TestCase(unittest.TestCase):
         d = self.proxy.send(b)
         return d
 
+    def _storeSID(self, res):
+        self.sid = res[0]['sid']
+        return res
+
+    def connect(self, b):
+        d = self.proxy.connect(b)
+        # If we don't already have a SID, store the one we get back.
+        if not self.sid:
+            d.addCallback(self._storeSID)
+        return d
+
         
 
     def _error(self, e):
