@@ -229,6 +229,27 @@ class XEP0124TestCase(test_basic.TestCase):
         return d
 
 
+    def testStreamParseError(self):
+        """
+        Test that remote-connection-failed is received when the proxy receives invalid XML
+        from the XMPP server.
+        """
+
+        def _testStreamError(res):
+            if not isinstance(res.value, httpb_client.HTTPBNetworkTerminated):
+                return res
+
+            self.failUnlessEqual(res.value.body_tag.getAttribute('condition', None), 'remote-connection-failed')
+
+        def _failStreamError(res):
+            self.fail('Expected a remote-connection-failed error')
+
+        def _testSessionCreate(res):
+            self.sid = res[0]['sid']
+            self.server_protocol.triggerInvalidXML()
+            return self.send().addCallbacks(_failStreamError, _testStreamError)
+
+        return self.proxy.connect(self.getBodyXML()).addCallback(_testSessionCreate)
 
     def testFeaturesError(self):
         """

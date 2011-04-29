@@ -9,6 +9,7 @@ from twisted.names.srvconnect import SRVConnector
 
 try:
     from twisted.words.xish import domish, xmlstream
+    from twisted.words.protocols import jabber as jabber_protocol
 except ImportError:
     from twisted.xish import domish, xmlstream
 
@@ -515,9 +516,15 @@ class Session(jabber.JabberClientFactory, server.Session):
     def streamError(self, streamerror):
         """called when we get a stream:error stanza"""
         
-        err_elem = getattr(streamerror.value, "element")
+        if isinstance(streamerror.value, jabber_protocol.error.StreamError):
+            # This is an actual stream:error.  Create a remote-stream-error to encapsulate it.
+            err_elem = getattr(streamerror.value, "element")
+            e = self.buildRemoteError(err_elem)
+        else:
+            # This is another error, such as an XML parsing error.  This isn't a stream:error,
+            # so expose it as remote-connection-failed.
+            e = error.Error('remote-connection-failed')
 
-        e = self.buildRemoteError(err_elem)
         do_expire = True
         
         if len(self.waiting_requests) > 0:

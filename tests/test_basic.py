@@ -160,3 +160,26 @@ class TestCase(unittest.TestCase):
 
         return d
         
+    def getBodyXML(self, **kwargs):
+        """
+        Return the <body/> XML used by most tests.
+        """
+        options = {
+            'rid': self.rid,
+            'wait': 60,
+            'ack': 1
+        }
+        for key, value in kwargs.iteritems():
+            options[key] = value
+        keys = ["%s='%s'" % (key, value) for key, value in options.iteritems()]
+        return """
+        <body content='text/xml; charset=utf-8'
+            hold='1'
+            to='localhost'
+            route='xmpp:127.0.0.1:%(server_port)i'
+            ver='1.6'
+            xml:lang='en'
+            %(keys)s
+            xmlns='http://jabber.org/protocol/httpbind'/>
+        """ % { 'server_port': self.server_port, 'keys': " ".join(keys)}
+
