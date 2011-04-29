@@ -7,7 +7,7 @@ from twisted.web import server, resource, static, http, client
 from twisted.words.protocols.jabber import jid
 from twisted.internet import defer, protocol, reactor, task
 from twisted.application import internet, service
-from twisted.words.xish import domish, xpath
+from twisted.words.xish import domish, xpath, xmlstream
 
 from twisted.python import log
 
@@ -228,6 +228,43 @@ class XEP0124TestCase(test_basic.TestCase):
 
         return d
 
+
+    @defer.inlineCallbacks
+    def testStreamFlushOnError(self):
+        """
+        Test that messages included in a <body type='terminate'> message from the
+        client are sent to the server before terminating.
+        """
+        yield self.connect(self.get_body_node(connect=True))
+
+        # Set got_testing_node to true when the XMPP server receives the <testing/> we
+        # send below.
+        got_testing_node = [False] # work around Python's 2.6 lack of nonlocal
+        wait = defer.Deferred()
+        def received_testing(a):
+            got_testing_node[0] = True
+            wait.callback(True)
+        self.server_protocol.addObserver("/testing", received_testing)
+
+        # Ensure that we always remove the received_testing listener.
+        try:
+            # Send <body type='terminate'><testing/></body>.  This should result in a
+            # HTTPBNetworkTerminated exception.
+            try:
+                yield self.proxy.send(self.get_body_node(ext='<testing/>', type='terminate'))
+            except httpb_client.HTTPBNetworkTerminated as e:
+                self.failUnlessEqual(e.body_tag.getAttribute('condition', None), None)
+
+            # Wait until <testing/> is actually received by the XMPP server.  The previous
+            # request completing only means that the proxy has received the stanza, not that
+            # it's been delivered to the XMPP server.
+            yield wait
+
+        finally:
+            self.server_protocol.removeObserver("/testing", received_testing)
+
+        # This should always be true, or we'd never have woken up from wait.
+        self.failUnless(got_testing_node[0])
 
     @defer.inlineCallbacks
     def testTerminateRace(self):
