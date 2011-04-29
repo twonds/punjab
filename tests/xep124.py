@@ -127,6 +127,10 @@ class XEP0124TestCase(test_basic.TestCase):
         """
         d = defer.Deferred()
 
+        # If an error occurs within the current Deferred, propagate it to d.
+        def propagateError(e):
+            d.errback(e)
+
         def testTimeout(res):
             passed = True
             
@@ -156,8 +160,8 @@ class XEP0124TestCase(test_basic.TestCase):
         def testResend(res):
             self.failUnless(res[0].name=='body', 'Wrong element')
             s = self.b.service.sessions[self.sid]
-            self.failUnless(s.inactivity==10,'Wrong inactivity value')
-            self.failUnless(s.wait==10, 'Wrong wait value')
+            self.failUnless(s.inactivity==2,'Wrong inactivity value')
+            self.failUnless(s.wait==2, 'Wrong wait value')
             reactor.callLater(s.wait+s.inactivity+1, sendTest)
             
 
@@ -169,7 +173,7 @@ class XEP0124TestCase(test_basic.TestCase):
             # send and wait 
             sd = self.send()
             
-            sd.addCallback(testResend)
+            sd.addCallbacks(testResend, propagateError)
             
 
 
@@ -179,14 +183,14 @@ class XEP0124TestCase(test_basic.TestCase):
       to='localhost'
       route='xmpp:127.0.0.1:%(server_port)i'
       ver='1.6'
-      wait='10'
+      wait='2'
       ack='1'
-      inactivity='10'
+      inactivity='2'
       xml:lang='en'
       xmlns='http://jabber.org/protocol/httpbind'/>
  """% { "rid": self.rid, "server_port": self.server_port }
 
-        self.proxy.connect(BOSH_XML).addCallback(testSessionCreate)
+        self.proxy.connect(BOSH_XML).addCallbacks(testSessionCreate, propagateError)
         d.addErrback(self.fail)
         return d
 
