@@ -229,6 +229,65 @@ class XEP0124TestCase(test_basic.TestCase):
         return d
 
 
+    @defer.inlineCallbacks
+    def testStreamKeying1(self):
+        """Test that connections succeed when stream keying is active."""
+
+        yield self.connect(self.get_body_node(connect=True, useKey=True))
+        yield self.proxy.send(self.get_body_node(useKey=True))
+        yield self.proxy.send(self.get_body_node(useKey=True))
+
+    @defer.inlineCallbacks
+    def testStreamKeying2(self):
+        """Test that 404 is received if stream keying is active and no key is supplied."""
+        yield self.connect(self.get_body_node(connect=True, useKey=True))
+
+        try:
+            yield self.proxy.send(self.get_body_node(useKey=False))
+        except ValueError as e:
+            self.failUnlessEqual(e.args[0], '404')
+        else:
+            self.fail("Expected 404 Not Found")
+
+
+    @defer.inlineCallbacks
+    def testStreamKeying3(self):
+        """Test that 404 is received if stream keying is active and an invalid key is supplied."""
+        yield self.connect(self.get_body_node(connect=True, useKey=True))
+
+        try:
+            yield self.proxy.send(self.get_body_node(useKey=True, key='0'*40))
+        except ValueError as e:
+            self.failUnlessEqual(e.args[0], '404')
+        else:
+            self.fail("Expected 404 Not Found")
+
+
+    @defer.inlineCallbacks
+    def testStreamKeying4(self):
+        """Test that 404 is received if we supply a key on a connection without active keying."""
+        yield self.connect(self.get_body_node(connect=True, useKey=False))
+
+        try:
+            yield self.proxy.send(self.get_body_node(key='0'*40))
+        except ValueError as e:
+            self.failUnlessEqual(e.args[0], '404')
+        else:
+            self.fail("Expected 404 Not Found")
+
+    @defer.inlineCallbacks
+    def testStreamKeying5(self):
+        """Test rekeying."""
+        yield self.connect(self.get_body_node(connect=True, useKey=True))
+        yield self.proxy.send(self.get_body_node(useKey=True))
+
+        # Erase all but the last key to force a rekeying.
+        self.keys.k = [self.keys.k[-1]]
+
+        yield self.proxy.send(self.get_body_node(useKey=True))
+        yield self.proxy.send(self.get_body_node(useKey=True))
+
+
     def testStreamParseError(self):
         """
         Test that remote-connection-failed is received when the proxy receives invalid XML

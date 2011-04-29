@@ -178,9 +178,7 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         self.version = attrs.get('version', 0.0)
                 
-        if attrs.has_key('newkey'):
-            newkey   = attrs['newkey']
-            self.key = newkey
+        self.key = attrs.get('newkey')
         
         self.wait  = int(attrs.get('wait', 0))            
 

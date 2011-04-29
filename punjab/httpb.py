@@ -707,34 +707,26 @@ class HttpbService(punjab.Service):
 ##            if body.hasAttribute('to') and body['to']!='':
 ##                return s, defer.fail(error.BadRequest)
             
-            # check for keys
-            # TODO - clean this up
-            foundNewKey = False
-            
-            if body.hasAttribute('newkey'):
-                newkey = body['newkey']
-                s.key = newkey
-                foundNewKey = True
-            try:
-                if body.hasAttribute('key') and not foundNewKey:
-                    if s.key is not None:
-                        key = hashlib.sha1(body['key']).hexdigest()
-                        next_key = body['key']
-                        if key == s.key:
-                            s.key = next_key
-                        else:
-                            if self.v:
-                                log.msg('Error in key')
-                            return s, defer.fail(error.NotFound)                        
-                    else:
-                        log.err()
-                        raise s, defer.fail(error.NotFound)
-                        
-            except:
-                log.msg('HTTPB ERROR: ')
-                log.err()
+            if bool(s.key) != body.hasAttribute('key'):
+                # This session is keyed, but there's no key in this packet; or there's
+                # a key in this packet, but the session isn't keyed.
                 return s, defer.fail(error.NotFound)
             
+            # If this session is keyed, validate the next key.
+            if s.key:
+                key = hashlib.sha1(body['key']).hexdigest()
+                next_key = body['key']
+                if key != s.key:
+                    if self.v:
+                        log.msg('Error in key')
+                    return s, defer.fail(error.NotFound)
+                s.key = next_key
+
+            # If there's a newkey in this packet, save it.  Do this after validating the
+            # previous key.
+            if body.hasAttribute('newkey'):
+                s.key = body['newkey']
+
         
             # need to check if this is a valid rid (within tolerance)
             if body.hasAttribute('rid') and body['rid']!='': 
