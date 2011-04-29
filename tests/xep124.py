@@ -1,6 +1,6 @@
 
 import os
-import sys, sha, random
+import sys, random
 from twisted.trial import unittest
 import time
 from twisted.web import server, resource, static, http, client
