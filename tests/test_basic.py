@@ -122,25 +122,7 @@ class TestCase(unittest.TestCase):
         return b
 
     def send(self, ext = None, sid = None, rid = None):
-        self.rid = self.rid + 1
-        if sid is None:
-            sid = self.sid
-        if rid is None:
-            rid = self.rid
-        b = domish.Element(("http://jabber.org/protocol/httpbind","body"))
-        b['content']  = 'text/xml; charset=utf-8'
-
-        b['rid']      = str(rid)
-        b['sid']      = str(sid)
-        b['xml:lang'] = 'en'
-
-        if ext is not None:
-            if isinstance(ext, domish.Element):
-                b.addChild(ext)
-            else:
-                b.addRawXml(ext)
-
-        self.key(b)
+        b = self.get_body_node(ext, sid, rid)
         d = self.proxy.send(b)
         return d
 
