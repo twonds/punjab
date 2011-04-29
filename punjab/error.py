@@ -8,9 +8,10 @@ class Error(Exception):
     children     = []
     def __init__(self,msg = None):
         Exception.__init__(self)
-        self.stanza_error = msg
-        self.punjab_error = msg
-        self.msg          = msg
+        if msg:
+            self.stanza_error = msg
+            self.punjab_error = msg
+            self.msg          = msg
         
     def __str__(self):
         return self.stanza_error
