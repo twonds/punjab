@@ -17,7 +17,7 @@ Copyright (C) 2001-2010 Christopher Zorn , tofu@thetofu.com
 GENERAL INFORMATION
 
 PunJab is a HTTP jabber client interface. It is a BOSH connection manager that
-allows persistent client connections to a XMPP server. 
+allows persistent client connections to a XMPP server.
 
 For more information about punjab see the following URL :
 
@@ -26,5 +26,6 @@ http://code.stanziq.com/punjab
 
 CONTRIBUTORS
 
-Jack Moffitt xmpp:jackm@jabber.org - Improved HTTP Binding and Polling
-Garret Heaton <powdahound@gmail.com> - Whitelist improvements and bugfixes.
+Jack Moffitt xmpp:jackm@jabber.org
+Garret Heaton <powdahound@gmail.com>
+Zewt (https://github.com/zewt)
