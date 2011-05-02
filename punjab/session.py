@@ -9,13 +9,13 @@ from twisted.names.srvconnect import SRVConnector
 
 try:
     from twisted.words.xish import domish, xmlstream
+    from twisted.words.protocols import jabber as jabber_protocol
 except ImportError:
     from twisted.xish import domish, xmlstream
 
 
 import traceback
-import random
-import md5
+import os
 from punjab import jabber
 from punjab.xmpp import ns
 
@@ -25,6 +25,10 @@ import error
 try:
     from twisted.internet import ssl
 except ImportError:
+    ssl = None
+if ssl and not ssl.supported:
+    ssl = None
+if not ssl:
     log.msg("SSL ERROR: You do not have ssl support this may cause problems with tls client connections.")
 
 
@@ -44,15 +48,12 @@ class XMPPClientConnector(SRVConnector):
         """
         host, port = SRVConnector.pickServer(self)
 
-        if not self.servers and not self.orderedServers:
-            # no SRV record, fall back..
-            port = 5222
-        if port == 5223 and xmlstream.ssl:
-            context = xmlstream.ssl.ClientContextFactory()
-            context.method = xmlstream.ssl.SSL.SSLv23_METHOD
+        if port == 5223 and ssl:
+            context = ssl.ClientContextFactory()
+            context.method = ssl.SSL.SSLv23_METHOD
             
-            self.connectFunc = 'connectSSL'
-            self.connectFuncArgs = (context)
+            self.connectFuncName = 'connectSSL'
+            self.connectFuncArgs = (context,)
         return host, port
 
 def make_session(pint, attrs, session_type='BOSH'):
@@ -61,29 +62,9 @@ def make_session(pint, attrs, session_type='BOSH'):
     attrs - attributes sent from the body tag
     """    
 
-    # this may need some work, idea, code taken from twisted.web.server
-    pint.counter = pint.counter + 1
-    sid  = md5.new("%s_%s_%s" % (str(time.time()), str(random.random()) , str(pint.counter))).hexdigest()
 
-
-    s    = Session(pint, sid, attrs)
+    s    = Session(pint, attrs)
     
-    s.addBootstrap(xmlstream.STREAM_START_EVENT, s.streamStart)
-    s.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, s.connectEvent)
-    s.addBootstrap(xmlstream.STREAM_ERROR_EVENT, s.streamError)
-    s.addBootstrap(xmlstream.STREAM_END_EVENT, s.connectError)    
-    
-    s.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
-    
-    s.secure = 0
-    s.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
-    
-    if attrs.has_key('secure') and attrs['secure'] == 'true':
-        s.secure = 1
-        s.authenticator.useTls = 1
-    else:
-        s.authenticator.useTls = 0
-
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
         
@@ -100,7 +81,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     # timeout
     reactor.callLater(s.inactivity, s.checkExpired)
 
-    pint.sessions[sid] = s
+    pint.sessions[s.sid] = s
     
     return s, s.waiting_requests[0].deferred
     
@@ -128,7 +109,7 @@ class WaitingRequest(object):
 
 class Session(jabber.JabberClientFactory, server.Session):
     """ Jabber Client Session class for client XMPP connections. """
-    def __init__(self, pint, sid, attrs):
+    def __init__(self, pint, attrs):
         """
         Initialize the session
         """
@@ -150,11 +131,12 @@ class Session(jabber.JabberClientFactory, server.Session):
             else:
                 self.port = 5222
         
+        self.sid = "".join("%02x" % ord(i) for i in os.urandom(20))
+
         jabber.JabberClientFactory.__init__(self, self.to, pint.v)
-        server.Session.__init__(self, pint, sid)
+        server.Session.__init__(self, pint, self.sid)
         self.pint  = pint
 
-        self.sid   = sid
         self.attrs = attrs
         self.s     = None
 
@@ -167,7 +149,6 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.raw_buffer = u""
         self.xmpp_node  = ''       
         self.success    = 0        
-        self.secure     = 0
         self.mechanisms = []
         self.xmlstream  = None
         self.features   = None
@@ -179,13 +160,12 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         self.version = attrs.get('version', 0.0)
                 
-        if attrs.has_key('newkey'):
-            newkey   = attrs['newkey']
-            self.key = newkey
+        self.key = attrs.get('newkey')
         
         self.wait  = int(attrs.get('wait', 0))            
 
         self.hold  = int(attrs.get('hold', 0))
+        self.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
 
         if attrs.has_key('window'):
             self.window  = int(attrs['window'])
@@ -205,6 +185,11 @@ class Session(jabber.JabberClientFactory, server.Session):
         else:
             self.hostname = self.to
             
+        self.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
+
+        self.secure = attrs.has_key('secure') and attrs['secure'] == 'true'
+        self.authenticator.useTls = self.secure
+
         if attrs.has_key('route'):
             if attrs['route'].startswith("xmpp:"):
                 self.route = attrs['route'][5:]
@@ -229,6 +214,11 @@ class Session(jabber.JabberClientFactory, server.Session):
         if pint.v:
             log.msg('Session Created : %s %s' % (str(self.sid),str(time.time()), ))
         
+        self.addBootstrap(xmlstream.STREAM_START_EVENT, self.streamStart)
+        self.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, self.connectEvent)
+        self.addBootstrap(xmlstream.STREAM_ERROR_EVENT, self.streamError)
+        self.addBootstrap(xmlstream.STREAM_END_EVENT, self.connectError)
+
         # create the first waiting request
         d = defer.Deferred()
         timeout = 30
@@ -308,10 +298,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         if 'onExpire' in dir(self.pint):
             self.pint.onExpire(self.sid)
         if self.verbose and not getattr(self, 'terminated', False):
-            log.msg(self.sid)
-            log.msg(self.rid)
-            log.msg(self.waiting_requests)
-            log.msg('SESSION -> We have expired')
+            log.msg('SESSION -> We have expired', self.sid, self.rid, self.waiting_requests)
         self.disconnect()
     
     def terminate(self):
@@ -449,7 +436,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 
         # There is a tls initializer added by us, if it is available we need to try it
         if len(initializers)>0 and starttls:
-            self.secure = 1
+            self.secure = True
 
         if self.authid is None:
             self.authid = self.xmlstream.sid
@@ -517,13 +504,15 @@ class Session(jabber.JabberClientFactory, server.Session):
     def streamError(self, streamerror):
         """called when we get a stream:error stanza"""
         
-        try: # a workaround for a bug in twisted.words.protocols.jabber.error
-            err_elem = streamerror.value.getElement()
-            err_elem.toXml()
-        except: # no matter what the exception we just return None
-            err_elem = None
+        if isinstance(streamerror.value, jabber_protocol.error.StreamError):
+            # This is an actual stream:error.  Create a remote-stream-error to encapsulate it.
+            err_elem = getattr(streamerror.value, "element")
+            e = self.buildRemoteError(err_elem)
+        else:
+            # This is another error, such as an XML parsing error.  This isn't a stream:error,
+            # so expose it as remote-connection-failed.
+            e = error.Error('remote-connection-failed')
 
-        e = self.buildRemoteError(err_elem)
         do_expire = True
         
         if len(self.waiting_requests) > 0:
@@ -546,9 +535,9 @@ class Session(jabber.JabberClientFactory, server.Session):
     def connectError(self, xs):
         """called when we get disconnected"""
         
-        # FIXME: we should really only send the error event back if
-        # attempts to reconnect fail.  There's no reason temporary
-        # connection failures should be exposed upstream
+        # If the connection was established and lost, then we need to report the error
+        # back to the client, since he needs to reauthenticate.  FIXME: If the connection was
+        # lost before anything happened, we could silently retry instead.
         if self.verbose:
             log.msg('connect ERROR')
             try:
@@ -557,17 +546,28 @@ class Session(jabber.JabberClientFactory, server.Session):
             except:
                 pass
             
+
+        self.stopTrying()
+
+        e = error.Error('remote-connection-failed')
+
+        do_expire = True
+
         if self.waiting_requests:
-                        
-            if len(self.waiting_requests) > 0:
-                wr = self.waiting_requests.pop(0)
-                wr.doErrback(error.Error('remote-connection-failed'))
+            wr = self.waiting_requests.pop(0)
+            wr.doErrback(e)
+        else: # need to wait for a new request and then expire
+            do_expire = False
 
         if self.pint and self.pint.sessions.has_key(self.sid):
-            try:
-                self.expire()
-            except:
-                self.onExpire()
+            if do_expire:
+                try:
+                    self.expire()
+                except:
+                    self.onExpire()
+            else:
+                s = self.pint.sessions.get(self.sid)
+                s.stream_error = e
 
 
     def sendRawXml(self, obj):

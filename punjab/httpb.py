@@ -13,7 +13,7 @@ try:
 except ImportError:
     from twisted.xish import domish
 
-import sha, time
+import hashlib, time
 import error
 from session import make_session
 import punjab
@@ -580,7 +580,6 @@ class HttpbService(punjab.Service):
             self.make_session = make_session
         self.v  = verbose
         self.sessions = {}
-        self.counter  = 0
         self.polling = polling
         # self.expired  = {}
         self.use_raw  = use_raw
@@ -708,35 +707,26 @@ class HttpbService(punjab.Service):
 ##            if body.hasAttribute('to') and body['to']!='':
 ##                return s, defer.fail(error.BadRequest)
             
-            # check for keys
-            # TODO - clean this up
-            foundNewKey = False
+            if bool(s.key) != body.hasAttribute('key'):
+                # This session is keyed, but there's no key in this packet; or there's
+                # a key in this packet, but the session isn't keyed.
+                return s, defer.fail(error.Error('item-not-found'))
             
+            # If this session is keyed, validate the next key.
+            if s.key:
+                key = hashlib.sha1(body['key']).hexdigest()
+                next_key = body['key']
+                if key != s.key:
+                    if self.v:
+                        log.msg('Error in key')
+                    return s, defer.fail(error.Error('item-not-found'))
+                s.key = next_key
+
+            # If there's a newkey in this packet, save it.  Do this after validating the
+            # previous key.
             if body.hasAttribute('newkey'):
-                newkey = body['newkey']
-                s.key = newkey
-                foundNewKey = True
-            try:
-                if body.hasAttribute('key') and not foundNewKey:
-                    if s.key is not None:
-                        nk = sha.new(body['key'])
-                        key = nk.hexdigest()
-                        next_key = body['key']
-                        if key == s.key:
-                            s.key = next_key
-                        else:
-                            if self.v:
-                                log.msg('Error in key')
-                            return s, defer.fail(error.NotFound)                        
-                    else:
-                        log.err()
-                        raise s, defer.fail(error.NotFound)
-                        
-            except:
-                log.msg('HTTPB ERROR: ')
-                log.err()
-                return s, defer.fail(error.NotFound)
-            
+                s.key = body['newkey']
+
         
             # need to check if this is a valid rid (within tolerance)
             if body.hasAttribute('rid') and body['rid']!='': 
@@ -770,24 +760,21 @@ class HttpbService(punjab.Service):
     def _parse(self, session, body_tag, xmpp_elements):
         # increment the request counter
         session.rid  = session.rid + 1
-        dont_poll = False
-        d = None
         
         if getattr(session, 'stream_error', None) != None:
-            # set up waiting request
+            # The server previously sent us a stream:error, and has probably closed
+            # the connection by now.  Forward the error to the client and terminate
+            # the session.
             d = defer.Deferred()            
             d.errback(session.stream_error)
             session.elems = []
             session.terminate()
+            return d
 
-            dont_poll = True
-        else:
-            # send all the elements
-            for el in xmpp_elements:
-                if not isinstance(el, domish.Element):
-                    session.sendRawXml(el)
-                    continue
-            
+        # Send received elements from the client to the server.  Do this even for
+        # type='terminate'.
+        for el in xmpp_elements:
+            if isinstance(el, domish.Element):
                 # something is wrong here, need to figure out what
                 # the xmlns will be lost if this is not done
                 # punjab.uriCheck(el,NS_BIND)              
@@ -799,17 +786,15 @@ class HttpbService(punjab.Service):
                     el.uri = None
                 if el.defaultUri == NS_BIND:
                     el.defaultUri = None
-                    
-                session.sendRawXml(el)
+
+            session.sendRawXml(el)
 
         if body_tag.hasAttribute('type') and \
            body_tag['type'] == 'terminate':
-            d = session.terminate()
-        elif not dont_poll:
-            # normal request
-            d = session.poll(d, rid = int(body_tag['rid']))
-            
-        return d
+            return session.terminate()
+
+        # normal request
+        return session.poll(None, rid = int(body_tag['rid']))
         
     def _returnIq(self, cur_session, d, iq):
         """

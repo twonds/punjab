@@ -1,5 +1,5 @@
 from twisted.internet import defer, protocol, reactor, stdio
-from twisted.python import log, reflect
+from twisted.python import log, reflect, failure
 try:
     from twisted.words.xish import domish, utility
 except:
@@ -10,7 +10,7 @@ from twisted.words.protocols.jabber import xmlstream, client, jid
 
 from twisted.protocols import basic
 import urlparse
-import random, binascii, base64, md5, sha, time, os, random
+import random, binascii, base64, hashlib, time, os, random
 
 import os,sys
 
@@ -50,6 +50,19 @@ class NotAuthorized(Error):
 
 class NotImplemented(Error):
     pass
+
+
+
+# Exceptions raised by the client.
+class HTTPBException(Exception): pass
+class HTTPBNetworkTerminated(HTTPBException):
+    def __init__(self, body_tag, elements):
+        self.body_tag = body_tag
+        self.elements = elements
+
+    def __str__(self):
+        return self.body_tag.toXml()
+
 
 
 class XMPPAuthenticator(client.XMPPAuthenticator):
@@ -157,10 +170,11 @@ class QueryFactory(protocol.ClientFactory):
             raise
         else:
             if body_tag.hasAttribute('type') and body_tag['type'] == 'terminate':
+                error = failure.Failure(HTTPBNetworkTerminated(body_tag, elements))
                 if self.deferred.called:
-                    return defer.fail((body_tag,elements))
+                    return defer.fail(error)
                 else:            
-                    self.deferred.errback((body_tag,elements))
+                    self.deferred.errback(error)
                 return
             if self.deferred.called:
                 return defer.succeed((body_tag,elements))
@@ -190,40 +204,38 @@ class QueryFactory(protocol.ClientFactory):
             
 
 
-import random, sha, md5
 
 class Keys:
-    """ A class to generate keys for http binding """
+    """Generate keys according to XEP-0124 #15 "Protecting Insecure Sessions"."""
     def __init__(self):
-        self.set_keys()
-        
-        
-    def set_keys(self):
-        seed = random.randint(30,1000000)
-        self.num_keys = random.randint(55,255)
         self.k = []
-        self.k.append(seed)
-        for i in range(self.num_keys-1):
-            x = i + 1
-            self.k.append(sha.new(str(self.k[x-1])).hexdigest())
+        
+    def _set_keys(self):
+        seed = os.urandom(1024)
+        num_keys = random.randint(55,255)
+        self.k = [hashlib.sha1(seed).hexdigest()]
+        for i in xrange(num_keys-1):
+            self.k.append(hashlib.sha1(self.k[-1]).hexdigest())
 
-        self.key_index = self.num_keys - 1
-    
     def getKey(self):
-        self.key_index = self.key_index - 1
-        return self.k.pop(self.key_index)
+        """
+        Return (key, newkey), where key is the next key to use and newkey is the next
+        newkey value to use.  If key or newkey are None, the next request doesn't require
+        that value.
+        """
+        if not self.k:
+            # This is the first call, so generate keys and only return new_key.
+            self._set_keys()
+            return None, self.k.pop()
 
-    def firstKey(self):
-        if self.key_index == self.num_keys - 1:
-            return 1
-        else:
-            return 0
+        key = self.k.pop()
 
-    def lastKey(self):
-        if self.key_index == 0:
-            return 1
-        else:
-            return 0
+        if not self.k:
+            # We're out of keys.  Regenerate keys and re-key.
+            self._set_keys()
+            return key, self.k.pop()
+
+        return key, None
 
 
 class Proxy:
@@ -365,14 +377,12 @@ class HTTPBindingStream(xmlstream.XmlStream):
             
 
     def key(self,b):
-        if self.keys.lastKey():
-            self.keys.setKeys()
-        
-        if self.keys.firstKey():
-            b['newkey'] = self.keys.getKey()
-        else:
-            b['key'] = self.keys.getKey()
-        return b
+        key, newkey = self.keys.getKey()
+
+        if key:
+            b['key'] = key
+        if newkey:
+            b['newkey'] = newkey
 
     def _cbSend(self, result):
         body, elements = result

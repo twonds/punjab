@@ -1,6 +1,6 @@
 
 import os
-import sys, sha
+import sys
 from twisted.trial import unittest
 import time
 from twisted.words.protocols.jabber import jid
