@@ -11,7 +11,7 @@ root = static.File("./html")
 #bosh = HttpbService(1, use_raw=True)
 bosh = HttpbService(1)
 
-# You can limit servers with a whitelist. 
+# You can limit servers with a whitelist.
 # The whitelist is a list of strings to match domain names.
 # bosh.white_list = ['jabber.org', 'thetofu.com']
 # or a black list

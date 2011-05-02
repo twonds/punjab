@@ -14,18 +14,18 @@ from punjab.xmpp import server as xmppserver
 from punjab import httpb_client
 
 class DummyTransport:
-    
+
     def __init__(self):
         self.data = []
- 	       
+
     def write(self, bytes):
         self.data.append(bytes)
- 	
+
     def loseConnection(self, *args, **kwargs):
         self.data = []
 
 class TestCase(unittest.TestCase):
-    """Basic test class for Punjab 
+    """Basic test class for Punjab
     """
 
     def setUp(self):
@@ -38,18 +38,18 @@ class TestCase(unittest.TestCase):
         self.root.putChild('xmpp-bosh', self.b)
 
         self.site  = server.Site(self.root)
-        
+
         self.p =  reactor.listenTCP(0, self.site, interface="127.0.0.1")
         self.port = self.p.getHost().port
 
         # set up proxy
-        
+
         self.proxy = httpb_client.Proxy(self.getURL())
         self.sid   = None
         self.keys  = httpb_client.Keys()
 
         # set up dummy xmpp server
-        
+
         self.server_service = xmppserver.XMPPServerService()
         self.server_factory = xmppserver.IXMPPServerFactory(self.server_service)
         self.server = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")

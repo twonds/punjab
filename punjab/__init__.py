@@ -44,9 +44,8 @@ class Service(service.Service):
             log.msg('Punjab Error: ')
             log.msg(failure.printBriefTraceback())
             log.msg(body)
-        failure.raiseException()                
-        
-            
+        failure.raiseException()
+
     def success(self, result, body = None):
         """
         If success we log it and return result
@@ -61,10 +60,9 @@ def makeService(config):
     Create a punjab service to run
     """
     from twisted.web import  server, resource, static
-    from twisted.application import service, internet
+    from twisted.application import internet
 
     import httpb
-
 
     serviceCollection = PunjabService()
 
@@ -103,7 +101,7 @@ def makeService(config):
         sm.setServiceParent(serviceCollection)
     else:
         sm = internet.TCPServer(int(config['port']), site)
-        
+
         sm.setServiceParent(serviceCollection)
 
     serviceCollection.httpb = b

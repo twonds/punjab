@@ -51,7 +51,7 @@ class XMPPClientConnector(SRVConnector):
         if port == 5223 and ssl:
             context = ssl.ClientContextFactory()
             context.method = ssl.SSL.SSLv23_METHOD
-            
+
             self.connectFuncName = 'connectSSL'
             self.connectFuncArgs = (context,)
         return host, port
@@ -60,14 +60,13 @@ def make_session(pint, attrs, session_type='BOSH'):
     """
     pint  - punjab session interface class
     attrs - attributes sent from the body tag
-    """    
-
+    """
 
     s    = Session(pint, attrs)
-    
+
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
-        
+
     connect_srv = True
     if attrs.has_key('route'):
         connect_srv = False
@@ -82,9 +81,9 @@ def make_session(pint, attrs, session_type='BOSH'):
     reactor.callLater(s.inactivity, s.checkExpired)
 
     pint.sessions[s.sid] = s
-    
+
     return s, s.waiting_requests[0].deferred
-    
+
 
 class WaitingRequest(object):
     """A helper object for managing waiting requests."""

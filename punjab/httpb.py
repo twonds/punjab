@@ -45,7 +45,7 @@ class HttpbElementStream(domish.ExpatElementStream):
         if prefixes:
             self.prefixes.update(prefixes)
         self.prefixes.update(domish.G_PREFIXES)
-        self.prefixStack = [domish.G_PREFIXES.values()] 
+        self.prefixStack = [domish.G_PREFIXES.values()]
         self.prefixCounter = 0
 
 
@@ -65,7 +65,6 @@ class HttpbElementStream(domish.ExpatElementStream):
     def _onStartElement(self, name, attrs):
         # Generate a qname tuple from the provided name
         attr_str   = ''
-        prefix_str = ''
         defaultUri = None
         uri        = None
         qname = name.split(" ")
@@ -77,45 +76,45 @@ class HttpbElementStream(domish.ExpatElementStream):
         if self.currElem:
             defaultUri = self.currElem.defaultUri
             uri = self.currElem.uri
-            
+
         if not defaultUri and currentUri in self.defaultNsStack:
             defaultUri = self.defaultNsStack[1]
-        
+
         if defaultUri and currentUri != defaultUri:
 
             raw_xml = u"""<%s xmlns='%s'%s""" % (qname[1], qname[0], '%s')
-        
+
         else:
             raw_xml = u"""<%s%s""" % (qname[1], '%s')
 
 
         # Process attributes
-        
+
         for k, v in attrs.items():
             if k.find(" ") != -1:
-                aqname = k.split(" ")                
+                aqname = k.split(" ")
                 attrs[(aqname[0], aqname[1])] = v
-                
+
                 attr_prefix = self.getPrefix(aqname[0])
                 if not self.prefixInScope(attr_prefix):
-                    attr_str = attr_str + " xmlns:%s='%s'" % (attr_prefix, 
+                    attr_str = attr_str + " xmlns:%s='%s'" % (attr_prefix,
                                                               aqname[0])
                     self.prefixStack[-1].append(attr_prefix)
-                attr_str = attr_str + " %s:%s='%s'" % (attr_prefix, 
+                attr_str = attr_str + " %s:%s='%s'" % (attr_prefix,
                                                        aqname[1],
-                                                       domish.escapeToXml(v, 
+                                                       domish.escapeToXml(v,
                                                                           True))
                 del attrs[k]
             else:
                 v = domish.escapeToXml(v, True)
-                attr_str = attr_str + " " + k + "='" + v + "'" 
+                attr_str = attr_str + " " + k + "='" + v + "'"
 
         raw_xml = raw_xml % (attr_str,)
-        
+
         # Construct the new element
         e = domish.Element(qname, self.defaultNsStack[-1], attrs, self.localPrefixes)
         self.localPrefixes = {}
-        
+
         # Document already started
         if self.documentStarted == 1:
             if self.currElem != None:
@@ -125,7 +124,7 @@ class HttpbElementStream(domish.ExpatElementStream):
 
                 self.currElem.children.append(e)
                 e.parent = self.currElem
-            
+
             self.currRawElem = self.currRawElem + raw_xml
             self.currElem = e
         # New document
@@ -138,7 +137,7 @@ class HttpbElementStream(domish.ExpatElementStream):
         # Check for null current elem; end of doc
         if self.currElem is None:
             self.DocumentEndEvent()
-            
+
         # Check for parent that is None; that's
         # the top of the stack
         elif self.currElem.parent is None:
@@ -166,7 +165,7 @@ class HttpbElementStream(domish.ExpatElementStream):
             else:
                 self.currRawElem = self.currRawElem  + domish.escapeToXml(data)
                 #self.currRawElem = self.currRawElem  + data
-            
+
             self.currElem.addContent(data)
 
     def _onStartNamespace(self, prefix, uri):
@@ -197,7 +196,7 @@ def elementStream():
         return es
 
 # make httpb body class, similar to xmlrpclib
-# 
+#
 class HttpbParse:
     """
     An xml parser for parsing the body elements.
@@ -215,10 +214,10 @@ class HttpbParse:
         Parse incoming xml and return the body and its children in a list
         """
         self.stream.parse(buf)
-        
+
         # return the doc element and its children in a list
-        return self.body, self.xmpp_elements 
-    
+        return self.body, self.xmpp_elements
+
     def serialize(self, obj):
         """
         Turn object into a string type
@@ -230,7 +229,7 @@ class HttpbParse:
     def onDocumentStart(self, rootelem):
         """
         The body document has started.
-        
+
         This should be a body.
         """
         if rootelem.name == 'body':
@@ -262,7 +261,7 @@ class HttpbParse:
         self.stream.DocumentEndEvent = self.onDocumentEnd
         self.body = ""
         self.xmpp_elements = []
-        
+
 
     def onDocumentEnd(self):
         """
@@ -299,9 +298,9 @@ class IHttpbService(Interface):
 
     def getXmppElements(self, body, session):
         """ """
-        
 
-        
+
+
 class IHttpbFactory(Interface):
     """
     Factory class for generating binding sessions.
@@ -318,8 +317,8 @@ class IHttpbFactory(Interface):
     def buildProtocol(self, addr):
         """Return a protocol """
 
-        
-    
+
+
 class Httpb(resource.Resource):
     """
     Http resource to handle BOSH requests.
@@ -343,7 +342,7 @@ class Httpb(resource.Resource):
         request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
         request.setHeader('Access-Control-Max-Age', '86400')
         return ""
-                
+
     def render_GET(self, request):
         """
         GET is not used, print docs.
@@ -368,11 +367,11 @@ class Httpb(resource.Resource):
             log.msg(request.received_headers)
             log.msg("HTTPB POST : ")
             log.msg(str(request.content.read()))
-            request.content.seek(0, 0)       
+            request.content.seek(0, 0)
 
         self.hp       = HttpbParse()
         try:
-            body_tag, xmpp_elements = self.hp.parse(request.content.read()) 
+            body_tag, xmpp_elements = self.hp.parse(request.content.read())
             self.hp._reset()
 
             if getattr(body_tag, 'name', '') != "body":
@@ -384,13 +383,13 @@ class Httpb(resource.Resource):
             log.msg('ERROR: Xml Parse Error')
             log.err()
             self.hp._reset()
-            self.send_http_error(400, request) 
+            self.send_http_error(400, request)
             return server.NOT_DONE_YET
         except:
             log.err()
             # reset parser, just in case
             self.hp._reset()
-            self.send_http_error(400, request) 
+            self.send_http_error(400, request)
             return server.NOT_DONE_YET
         else:
             if self.service.inSession(body_tag):
@@ -399,7 +398,7 @@ class Httpb(resource.Resource):
                     request.rid = body_tag['rid']
                     if self.service.v:
                         log.msg(request.rid)
-                
+
                 s, d = self.service.parseBody(body_tag, xmpp_elements)
                 d.addCallback(self.return_httpb, s, request)
             elif body_tag.hasAttribute('sid'):
@@ -412,11 +411,11 @@ class Httpb(resource.Resource):
                 # start session
                 s, d = self.service.startSession(body_tag, xmpp_elements)
                 d.addCallback(self.return_session, s, request)
-                
+
             # Add an error back for returned errors
             d.addErrback(self.return_error, request)
         return server.NOT_DONE_YET
-        
+
 
     def return_session(self, data, session, request):
         # create body
@@ -424,8 +423,8 @@ class Httpb(resource.Resource):
             self.send_http_error(200, request, 'remote-connection-failed',
                                  'terminate')
             return server.NOT_DONE_YET
-        
-        b = domish.Element((NS_BIND, "body"))       
+
+        b = domish.Element((NS_BIND, "body"))
         # if we don't have an authid, we have to fail
         if session.authid != 0:
             b['authid'] = session.authid
@@ -433,20 +432,20 @@ class Httpb(resource.Resource):
             self.send_http_error(500, request, 'internal-server-error',
                                  'terminate')
             return server.NOT_DONE_YET
-        
+
         b['sid']  = session.sid
         b['wait'] = str(session.wait)
         if session.secure == 0:
             b['secure'] = 'false'
         else:
             b['secure'] = 'true'
-            
+
         b['inactivity'] = str(session.inactivity)
         ##b['polling'] = '15' # TODO: make this configurable
-        b['polling'] = str(self.polling) 
+        b['polling'] = str(self.polling)
         b['requests'] = str(session.hold + 1)
         b['window'] = str(session.window)
-        
+
         punjab.uriCheck(b, NS_BIND)
         if session.attrs.has_key('content'):
             b['content'] = session.attrs['content']
@@ -462,7 +461,7 @@ class Httpb(resource.Resource):
         self.return_body(request, b)
 
     def return_httpb(self, data, session, request):
-        # create body                
+        # create body
         b = domish.Element((NS_BIND, "body"))
         punjab.uriCheck(b, NS_BIND)
         session.touch()
@@ -470,26 +469,26 @@ class Httpb(resource.Resource):
             b['type']      = 'terminate'
         if data:
             b.children += data
-        
-        self.return_body(request, b, session.charset)        
 
-    
+        self.return_body(request, b, session.charset)
+
+
     def return_error(self, e, request):
         echildren = []
-        
+
         try:
             # TODO - clean this up and make errors better
             if getattr(e.value,'stanza_error',None):
                 ec = getattr(e.value, 'children', None)
                 if ec:
                     echildren = ec
-                    
+
                 self.send_http_error(error.conditions[str(e.value.stanza_error)]['code'],
                                      request,
                                      condition = str(e.value.stanza_error),
                                      typ = error.conditions[str(e.value.stanza_error)]['type'],
                                      children=echildren)
-                
+
                 return  server.NOT_DONE_YET
             elif e.value:
                 self.send_http_error(error.conditions[str(e.value)]['code'],
@@ -503,11 +502,11 @@ class Httpb(resource.Resource):
             log.err()
             pass
 
-    
+
     def return_body(self, request, b, charset="utf-8"):
         request.setResponseCode(200)
         bxml = b.toXml(prefixes=ns.XMPP_PREFIXES.copy()).encode(charset,'replace')
-        
+
         request.setHeader('content-type', 'text/xml')
         request.setHeader('content-length', len(bxml))
         if self.service.v:
@@ -517,11 +516,11 @@ class Httpb(resource.Resource):
                 log.msg(request.rid)
         request.write(bxml)
         request.finish()
-            
+
     def send_http_error(self, code, request, condition = 'undefined-condition', typ = 'terminate', data = '', charset = 'utf-8', children=None):
         request.setResponseCode(int(code))
         xml_prefixes = ns.XMPP_PREFIXES.copy()
-        
+
         b = domish.Element((NS_BIND, "body"))
         if condition:
             b['condition'] = str(condition)
@@ -540,7 +539,7 @@ class Httpb(resource.Resource):
 
         if self.service.v:
             log.msg('HTTPB Error %d' %(int(code),))
-        
+
         if int(code) != 400 and int(code) != 404 and int(code) != 403:
             if data != '':
                 if condition == 'see-other-uri':
@@ -548,12 +547,12 @@ class Httpb(resource.Resource):
                 else:
                     t = b.addElement('text', content = str(data))
                     t['xmlns'] = 'urn:ietf:params:xml:ns:xmpp-streams'
-                    
+
             bxml = b.toXml(prefixes=xml_prefixes).encode(charset, 'replace')
             if self.service.v:
                 log.msg('HTTPB Return Error: ' + str(code) + ' -> ' + bxml)
             request.setHeader("content-type", "text/xml")
-            request.setHeader("content-length", len(bxml))    
+            request.setHeader("content-length", len(bxml))
             request.write(bxml)
         else:
             request.setHeader("content-length", "0")
@@ -570,9 +569,9 @@ class HttpbService(punjab.Service):
     white_list = []
     black_list = []
 
-    def __init__(self, 
-                 verbose = 0, polling = 15, 
-                 use_raw = False, bindAddress=("0.0.0.0", 0), 
+    def __init__(self,
+                 verbose = 0, polling = 15,
+                 use_raw = False, bindAddress=("0.0.0.0", 0),
                  session_creator = None):
         if session_creator is not None:
             self.make_session = session_creator
@@ -602,16 +601,16 @@ class HttpbService(punjab.Service):
                     if time_now - wr.wait_start >= wr.timeout:
                         wr.delayedcall(wr.deferred)
 
-            
+
     def startSession(self, body, xmpp_elements):
         """ Start a punjab jabber session """
-    
+
         # look for rid
         if not body.hasAttribute('rid') or body['rid']=='':
             if self.v:
                 log.msg('start session called but we had a rid')
             return None, defer.fail(error.NotFound)
-                
+
         # look for to
         if not body.hasAttribute('to') or body['to']=='':
             return None, defer.fail(error.BadRequest)
@@ -657,7 +656,7 @@ class HttpbService(punjab.Service):
         # look for wait
         if not body.hasAttribute('wait') or body['wait']=='':
             body['wait'] = 3
-                
+
         # look for lang
         lang = None
         if not body.hasAttribute("xml:lang") or body['xml:lang']=='':
@@ -668,8 +667,7 @@ class HttpbService(punjab.Service):
         if lang:
             body['lang'] = lang
         if not body.hasAttribute('inactivity'):
-            body['inactivity'] = 60 
-        
+            body['inactivity'] = 60
         return self.make_session(self, body.attributes)
 
     def stopService(self):
@@ -688,7 +686,7 @@ class HttpbService(punjab.Service):
 
     def parseBody(self, body, xmpp_elements):
         try:
-            # grab session                    
+            # grab session
             if body.hasAttribute('sid'):
                 sid = str(body['sid'])
             else:
@@ -702,16 +700,12 @@ class HttpbService(punjab.Service):
                 if self.v:
                     log.msg('session does not exist?')
                 return None, defer.fail(error.NotFound)
-            ##  XXX this seems to break xmpp:restart='true'  --vargas
-            ##  (cf. http://www.xmpp.org/extensions/xep-0206.html#preconditions-sasl [Example 10])
-##            if body.hasAttribute('to') and body['to']!='':
-##                return s, defer.fail(error.BadRequest)
-            
+
             if bool(s.key) != body.hasAttribute('key'):
                 # This session is keyed, but there's no key in this packet; or there's
                 # a key in this packet, but the session isn't keyed.
                 return s, defer.fail(error.Error('item-not-found'))
-            
+
             # If this session is keyed, validate the next key.
             if s.key:
                 key = hashlib.sha1(body['key']).hexdigest()
@@ -727,9 +721,9 @@ class HttpbService(punjab.Service):
             if body.hasAttribute('newkey'):
                 s.key = body['newkey']
 
-        
+
             # need to check if this is a valid rid (within tolerance)
-            if body.hasAttribute('rid') and body['rid']!='': 
+            if body.hasAttribute('rid') and body['rid']!='':
                 if s.cache_data.has_key(int(body['rid'])):
                     s.touch()
                     # implements issue 32 and returns the data returned on a dropped connection
@@ -742,30 +736,29 @@ class HttpbService(punjab.Service):
                 if self.v:
                     log.msg('There is no rid on this request')
                 return  s, defer.fail(error.NotFound)
-            
+
             return s, self._parse(s, body, xmpp_elements)
-            
-            
+
         except:
             log.err()
             return  s, defer.fail(error.InternalServerError)
 
-            
+
     def onExpire(self, session_id):
         """ preform actions based on when the jabber connection expires """
         if self.v:
             log.msg('expire (%s)' % (str(session_id),))
             log.msg(len(self.sessions.keys()))
-        
+
     def _parse(self, session, body_tag, xmpp_elements):
         # increment the request counter
         session.rid  = session.rid + 1
-        
+
         if getattr(session, 'stream_error', None) != None:
             # The server previously sent us a stream:error, and has probably closed
             # the connection by now.  Forward the error to the client and terminate
             # the session.
-            d = defer.Deferred()            
+            d = defer.Deferred()
             d.errback(session.stream_error)
             session.elems = []
             session.terminate()
@@ -777,7 +770,7 @@ class HttpbService(punjab.Service):
             if isinstance(el, domish.Element):
                 # something is wrong here, need to figure out what
                 # the xmlns will be lost if this is not done
-                # punjab.uriCheck(el,NS_BIND)              
+                # punjab.uriCheck(el,NS_BIND)
                 # if el.uri and el.uri != NS_BIND:
                 #    el['xmlns'] = el.uri
                 # TODO - get rid of this when we stop supporting old versions
@@ -795,7 +788,7 @@ class HttpbService(punjab.Service):
 
         # normal request
         return session.poll(None, rid = int(body_tag['rid']))
-        
+
     def _returnIq(self, cur_session, d, iq):
         """
         A callback from auth iqs
@@ -806,15 +799,14 @@ class HttpbService(punjab.Service):
         """
         A callback from auth iqs
         """
-        
+
         # session.elems.append(iq)
         return cur_session.poll(d)
-        
-        
+
     def inSession(self, body):
         """ """
         if body.hasAttribute('sid'):
-            if self.sessions.has_key(body['sid']):        
+            if self.sessions.has_key(body['sid']):
                 return True
         return False
 
@@ -824,18 +816,18 @@ class HttpbService(punjab.Service):
         """
         for i, obj in enumerate(session.msgs):
             m = session.msgs.pop(0)
-            b.addChild(m)            
+            b.addChild(m)
         for i, obj in enumerate(session.prs):
             p = session.prs.pop(0)
-            b.addChild(p)            
+            b.addChild(p)
         for i, obj in enumerate(session.iqs):
             iq = session.iqs.pop(0)
             b.addChild(iq)
-        
+
         return b
 
     def endSession(self, cur_session):
         """ end a punjab jabber session """
         d = cur_session.terminate()
         return d
-                
+
