@@ -8,9 +8,10 @@ class Error(Exception):
     children     = []
     def __init__(self,msg = None):
         Exception.__init__(self)
-        self.stanza_error = msg
-        self.punjab_error = msg
-        self.msg          = msg
+        if msg:
+            self.stanza_error = msg
+            self.punjab_error = msg
+            self.msg          = msg
         
     def __str__(self):
         return self.stanza_error
@@ -60,6 +61,7 @@ conditions = {
     'see-other-uri':	{'code': '200', 'type': 'terminate'},
     'system-shutdown':	{'code': '200', 'type': 'terminate'},
     'undefined-condition':	{'code': '200', 'type': 'terminate'},
+    'item-not-found':		{'code': '200', 'type': 'terminate'},
     
 }
 

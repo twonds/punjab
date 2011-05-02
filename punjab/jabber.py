@@ -1,4 +1,4 @@
-# punjab's jabber client 
+# punjab's jabber client
 from twisted.internet import reactor, error
 from twisted.words.protocols.jabber import client, jid
 from twisted.python import log
@@ -41,7 +41,7 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
         """
         p = self.authenticator = PunjabAuthenticator(host)
         xmlstream.XmlStreamFactory.__init__(self, p)
-        
+
         self.pending = {}
         self.maxRetries = 2
         self.host = host
@@ -61,7 +61,6 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
             if self.maxRetries and (self.retries > self.maxRetries):
                 if d:
                     d.errback(reason)
-                
 
 
     def rawDataIn(self, buf):
@@ -71,7 +70,6 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
     def rawDataOut(self, buf):
         log.msg("SEND: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace'))
 
-        
 
 class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
     namespace = "jabber:client"
@@ -88,9 +86,8 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
             self.xmlstream.otherEntity = jid.internJID(self.otherHost)
         self.xmlstream.prefixes = deepcopy(XMPP_PREFIXES)
         self.xmlstream.sendHeader()
-                
+
     def streamStarted(self, rootelem = None):
-        
         if hasNewTwisted: # This is here for backwards compatibility
             xmlstream.ConnectAuthenticator.streamStarted(self, rootelem)
         else:
@@ -98,7 +95,7 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
         if rootelem is None:
             self.xversion = 3
             return
-        
+
         self.xversion = 0
         if rootelem.hasAttribute('version'):
             self.version = rootelem['version']
@@ -106,7 +103,6 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
             self.version = 0.0
 
     def associateWithStream(self, xs):
-        
         xmlstream.ConnectAuthenticator.associateWithStream(self, xs)
 
         inits = [ (xmlstream.TLSInitiatingInitializer, False),
@@ -118,7 +114,6 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
             init.required = required
             xs.initializers.append(init)
 
-        
     def _reset(self):
         # need this to be in xmlstream
         self.xmlstream.stream = domish.elementStream()
@@ -127,13 +122,12 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
         self.xmlstream.stream.DocumentEndEvent = self.xmlstream.onDocumentEnd
         self.xmlstream.prefixes = deepcopy(XMPP_PREFIXES)
         # Generate stream header
-        
+
         if self.version != 0.0:
             sh = "<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' version='%s' to='%s'>" % \
                  (self.namespace,self.version, self.streamHost.encode('utf-8'))
 
             self.xmlstream.send(str(sh))
-                                                                                                                
 
     def sendAuth(self, jid, passwd, callback, errback = None):
         self.jid    = jid
@@ -142,29 +136,28 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
             self.xmlstream.addObserver(INVALID_USER_EVENT,errback)
             self.xmlstream.addObserver(AUTH_FAILED_EVENT,errback)
         if self.version != '1.0':
-            
             iq = client.IQ(self.xmlstream, "get")
             iq.addElement(("jabber:iq:auth", "query"))
             iq.query.addElement("username", content = jid.user)
             iq.addCallback(callback)
             iq.send()
 
-    
-    def authQueryResultEvent(self, iq, callback):        
+
+    def authQueryResultEvent(self, iq, callback):
         if iq["type"] == "result":
             # Construct auth request
             iq = client.IQ(self.xmlstream, "set")
             iq.addElement(("jabber:iq:auth", "query"))
             iq.query.addElement("username", content = self.jid.user)
             iq.query.addElement("resource", content = self.jid.resource)
-            
+
             # Prefer digest over plaintext
             if client.DigestAuthQry.matches(iq):
                 digest = xmlstream.hashPassword(self.xmlstream.sid, self.passwd)
                 iq.query.addElement("digest", content = digest)
             else:
                 iq.query.addElement("password", content = self.passwd)
-                
+
             iq.addCallback(callback)
             iq.send()
         else:

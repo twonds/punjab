@@ -179,10 +179,20 @@ class XMPPServerProtocol(xmlstream.XmlStream):
         self.send("""<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>cmVhbG09ImNoZXNzcGFyay5jb20iLG5vbmNlPSJ0YUhIM0FHQkpQSE40eXNvNEt5cFlBPT0iLHFvcD0iYXV0aCxhdXRoLWludCIsY2hhcnNldD11dGYtOCxhbGdvcml0aG09bWQ1LXNlc3M=</challenge>""")
 
 
+    def triggerInvalidXML(self):
+        """Send invalid XML, to trigger a parse error."""
+        self.send("""<parse error=>""")
+        self.streamEnded(None)
+
     def triggerStreamError(self):
         """ send a stream error
         """
-        self.send("""<stream:error xmlns:stream='http://etherx.jabber.org/streams'><policy-violation xmlns='urn:ietf:params:xml:ns:xmpp-streams'/></stream:error>
+        self.send("""
+        <stream:error attrib="1" xmlns:stream='http://etherx.jabber.org/streams'>
+            <policy-violation xmlns='urn:ietf:params:xml:ns:xmpp-streams'/>
+            <text xmlns='urn:ietf:params:xml:ns:xmpp-streams' xml:lang='langcode'>Error text</text>
+            <arbitrary-extension val='2'/>
+        </stream:error>
 """)
         self.streamEnded(None)
 

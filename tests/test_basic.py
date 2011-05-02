@@ -14,18 +14,18 @@ from punjab.xmpp import server as xmppserver
 from punjab import httpb_client
 
 class DummyTransport:
-    
+
     def __init__(self):
         self.data = []
- 	       
+
     def write(self, bytes):
         self.data.append(bytes)
- 	
+
     def loseConnection(self, *args, **kwargs):
         self.data = []
 
 class TestCase(unittest.TestCase):
-    """Basic test class for Punjab 
+    """Basic test class for Punjab
     """
 
     def setUp(self):
@@ -38,21 +38,22 @@ class TestCase(unittest.TestCase):
         self.root.putChild('xmpp-bosh', self.b)
 
         self.site  = server.Site(self.root)
-        
+
         self.p =  reactor.listenTCP(0, self.site, interface="127.0.0.1")
         self.port = self.p.getHost().port
 
         # set up proxy
-        
+
         self.proxy = httpb_client.Proxy(self.getURL())
         self.sid   = None
         self.keys  = httpb_client.Keys()
 
         # set up dummy xmpp server
-        
+
         self.server_service = xmppserver.XMPPServerService()
         self.server_factory = xmppserver.IXMPPServerFactory(self.server_service)
-        self.server = reactor.listenTCP(5222, self.server_factory, interface="127.0.0.1")
+        self.server = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")
+        self.server_port = self.server.socket.getsockname()[1]
 
         # Hook the server's buildProtocol to make the protocol instance
         # accessible to tests.
@@ -72,20 +73,20 @@ class TestCase(unittest.TestCase):
 
 
     def key(self,b):
-        if self.keys.lastKey():
-            self.keys.setKeys()
-        
-        if self.keys.firstKey():
-            b['newkey'] = self.keys.getKey()
-        else:
-            b['key'] = self.keys.getKey()
-        return b 
+        key, newkey = self.keys.getKey()
+
+        if key:
+            b['key'] = key
+        if newkey:
+            b['newkey'] = newkey
+
+        return b
 
     def resend(self, ext = None):
         self.rid = self.rid - 1
         return self.send(ext)
 
-    def send(self, ext = None, sid = None, rid = None):
+    def get_body_node(self, ext=None, sid=None, rid=None, useKey=False, connect=False, **kwargs):
         self.rid = self.rid + 1
         if sid is None:
             sid = self.sid
@@ -93,10 +94,22 @@ class TestCase(unittest.TestCase):
             rid = self.rid
         b = domish.Element(("http://jabber.org/protocol/httpbind","body"))
         b['content']  = 'text/xml; charset=utf-8'
-
-        b['rid']      = str(rid)
-        b['sid']      = str(sid)
+        b['hold'] = '0'
+        b['wait'] = '60'
+        b['ack'] = '1'
         b['xml:lang'] = 'en'
+        b['rid'] = str(rid)
+
+        if sid:
+            b['sid'] = str(sid)
+
+        if connect:
+            b['to'] = 'localhost'
+            b['route'] = 'xmpp:127.0.0.1:%i' % self.server_port
+            b['ver'] = '1.6'
+
+        if useKey:
+            self.key(b)
 
         if ext is not None:
             if isinstance(ext, domish.Element):
@@ -104,8 +117,24 @@ class TestCase(unittest.TestCase):
             else:
                 b.addRawXml(ext)
 
-        b = self.key(b)
+        for key, value in kwargs.iteritems():
+            b[key] = value
+        return b
+
+    def send(self, ext = None, sid = None, rid = None):
+        b = self.get_body_node(ext, sid, rid)
         d = self.proxy.send(b)
+        return d
+
+    def _storeSID(self, res):
+        self.sid = res[0]['sid']
+        return res
+
+    def connect(self, b):
+        d = self.proxy.connect(b)
+        # If we don't already have a SID, store the one we get back.
+        if not self.sid:
+            d.addCallback(self._storeSID)
         return d
 
         
@@ -151,10 +180,11 @@ class TestCase(unittest.TestCase):
                 self.b.service.endSession(sess)
         if hasattr(self.proxy.factory,'client'):
             self.proxy.factory.client.transport.stopConnecting()
+        self.server_factory.protocol.delay_features = 0
         
 
         d = defer.maybeDeferred(self.server.stopListening)
         d.addCallback(cbStopListening)
 
         return d
-        
+
