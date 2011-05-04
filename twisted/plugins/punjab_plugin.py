@@ -2,8 +2,6 @@ from zope.interface import implements
 from twisted.python import usage
 from twisted.plugin import IPlugin
 from twisted.application.service import IServiceMaker
-from twisted.application import internet
-from twisted.python import usage
 
 # Due to the directory layout, and the fact that plugin directories aren't
 # modules (no __init__.py), this file is named something other than punjab.py,

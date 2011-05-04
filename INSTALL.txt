@@ -3,15 +3,15 @@ INSTALLING PUNJAB
 =================
 
 This document contains instructions on installing punjab
-on your system. 
+on your system.
 
 -------------
 Obtaining Punjab
 -------------
 
-Punjab can be located at the punjab web site, 
+Punjab can be located at the punjab web site,
 
-   http://code.stanziq.com/punjab
+   http://github.com/twonds/punjab
 
 
 -------------
@@ -24,15 +24,15 @@ Please make sure all dependencies are met before submitting a troubleshooting qu
 
 - Twisted >= 2.5
 
-  - Twisted-names 
+  - Twisted-names
   - Twisted-words >= 0.6.0
   - Twisted-web  >= 0.5.0
 
   Recommended
     - Twisted-conch >= 0.5.0
 
-  NOTE : 
-    You can download all of these packages with the Twisted Sumo package. 
+  NOTE :
+    You can download all of these packages with the Twisted Sumo package.
     http://twistedmatrix.com/
 
 - pyopenssl - if you want tls to work.
@@ -44,8 +44,8 @@ Please make sure all dependencies are met before submitting a troubleshooting qu
 Installing Punjab
 -------------
 
-1. Untar the current punjab-X.X.tar.gz file in a directory you would 
-   like punjab to reside. 
+1. Untar the current punjab-X.X.tar.gz file in a directory you would
+   like punjab to reside.
 
 shell>tar vxzf punjab-X.X.tar.gz
 
@@ -53,7 +53,7 @@ shell>tar vxzf punjab-X.X.tar.gz
 
 shell>python setup.py install
 
-3. Run punjab 
+3. Run punjab
 
 shell>twistd punjab
 
@@ -67,10 +67,13 @@ Run "twistd punjab --help" for options.
 Extending Punjab
 ---------------------------
 
-You are able to extend punjab in many ways. 
+You are able to extend punjab in many ways.
+
+For configuration flexibility you can use a .tac file. See punjab.tac for
+details.
 
 -------------
 Support
 -------------
 
- http://code.stanziq.com/punjab
+ http://github.com/twonds/punjab
