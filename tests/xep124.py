@@ -163,23 +163,23 @@ class XEP0124TestCase(test_basic.TestCase):
 
         return self.proxy.connect(BOSH_XML).addCallbacks(testSessionCreate)
 
-    def testStreamError(self):
+    def testRemoteError(self):
         """
-        This is to test if we get stream errors when there are no waiting requests.
+        This is to test if we get errors when there are no waiting requests.
         """
 
         def _testStreamError(res):
-            if not isinstance(res.value, httpb_client.HTTPBNetworkTerminated):
-                return res
+            self.assertEqual(True, isinstance(res.value, httpb_client.HTTPBNetworkTerminated))
 
-            self.failUnless(res.value.body_tag.hasAttribute('condition'), 'No attribute condition')
-            self.failUnlessEqual(res.value.body_tag['condition'], 'remote-connection-failed')
-
+            self.assertEqual(True, res.value.body_tag.hasAttribute('condition'), 'No attribute condition')
+            # This is not a stream error because we sent invalid xml
+            self.assertEqual(res.value.body_tag['condition'], 'remote-stream-error')
+            self.assertEqual(True, len(res.value.elements)>0)
             # The XML should exactly match the error XML sent by triggerStreamError().
-            self.failUnless(xpath.XPathQuery("/error[@attrib='1']").matches(res.value.elements[0]))
-            self.failUnless(xpath.XPathQuery("/error/policy-violation").matches(res.value.elements[0]))
-            self.failUnless(xpath.XPathQuery("/error/arbitrary-extension").matches(res.value.elements[0]))
-            self.failUnless(xpath.XPathQuery("/error/text[text() = 'Error text']").matches(res.value.elements[0]))
+            self.assertEqual(True,xpath.XPathQuery("/error[@attrib='1']").matches(res.value.elements[0]))
+            self.assertEqual(True,xpath.XPathQuery("/error/policy-violation").matches(res.value.elements[0]))
+            self.assertEqual(True,xpath.XPathQuery("/error/arbitrary-extension").matches(res.value.elements[0]))
+            self.assertEqual(True,xpath.XPathQuery("/error/text[text() = 'Error text']").matches(res.value.elements[0]))
 
 
 
@@ -249,7 +249,7 @@ class XEP0124TestCase(test_basic.TestCase):
             self.server_protocol.removeObserver("/testing", received_testing)
 
         # This should always be true, or we'd never have woken up from wait.
-        self.failUnless(got_testing_node[0])
+        self.assertEqual(True,got_testing_node[0])
 
     @defer.inlineCallbacks
     def testTerminateRace(self):
@@ -269,7 +269,7 @@ class XEP0124TestCase(test_basic.TestCase):
             self.server_protocol.triggerStreamError()
             yield self.proxy.send(self.get_body_node(type='terminate'))
         except httpb_client.HTTPBNetworkTerminated as e:
-            self.failUnlessEqual(e.body_tag.getAttribute('condition', None), 'remote-stream-error')
+            self.assertEqual(e.body_tag.getAttribute('condition', None), 'remote-stream-error')
         finally:
             log.removeObserver(log_observer)
 
@@ -339,10 +339,8 @@ class XEP0124TestCase(test_basic.TestCase):
         """
 
         def _testStreamError(res):
-            if not isinstance(res.value, httpb_client.HTTPBNetworkTerminated):
-                return res
-
-            self.failUnlessEqual(res.value.body_tag.getAttribute('condition', None), 'remote-connection-failed')
+            self.assertEqual(True, isinstance(res.value, httpb_client.HTTPBNetworkTerminated))
+            self.assertEqual(res.value.body_tag.getAttribute('condition', None), 'remote-connection-failed')
 
         def _failStreamError(res):
             self.fail('Expected a remote-connection-failed error')
@@ -360,13 +358,13 @@ class XEP0124TestCase(test_basic.TestCase):
         """
 
         def _testError(res):
-            self.failUnless(res[1][0].name=='challenge','Did not get correct challenge stanza')
+            self.assertEqual(True,res[1][0].name=='challenge','Did not get correct challenge stanza')
 
         def _testSessionCreate(res):
             self.sid = res[0]['sid']
             # this xml is valid, just for testing
             # the point is to wait for a stream error
-            self.failUnless(res[1][0].name=='features','Did not get initial features')
+            self.assertEqual(True,res[1][0].name=='features','Did not get initial features')
 
             d = self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>")
             d.addCallback(_testError)
@@ -398,7 +396,7 @@ class XEP0124TestCase(test_basic.TestCase):
         """
         @defer.inlineCallbacks
         def _testError(res):
-            self.failUnless(res[1][0].name=='challenge','Did not get correct challenge stanza')
+            self.assertEqual(res[1][0].name, 'challenge','Did not get correct challenge stanza')
             for r in range(5):
                 # send auth to bump up rid
                 res = yield self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>")
@@ -413,7 +411,7 @@ class XEP0124TestCase(test_basic.TestCase):
             self.sid = res[0]['sid']
             # this xml is valid, just for testing
             # the point is to wait for a stream error
-            self.failUnless(res[1][0].name=='features','Did not get initial features')
+            self.assertEqual(res[1][0].name, 'features','Did not get initial features')
 
             d = self.send("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>")
             d.addCallback(_testError)

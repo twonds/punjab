@@ -12,14 +12,14 @@ class Error(Exception):
             self.stanza_error = msg
             self.punjab_error = msg
             self.msg          = msg
-        
+
     def __str__(self):
         return self.stanza_error
 
 class BadRequest(Error):
     stanza_error = 'bad-request'
     msg = 'bad-request'
-    
+
 class InternalServerError(Error):
     msg = 'internal-server-error'
     stanza_error = 'internal-server-error'
@@ -27,12 +27,11 @@ class InternalServerError(Error):
 class RemoteConnectionFailed(Error):
     msg = 'remote-connection-failed'
     stanza_error = 'remote-connection-failed'
-    
-    
+
 class NotFound(Error):
     msg = '404 not found'
     stanza_error = 'not-found'
-    
+
 class NotAuthorized(Error):
     pass
 
@@ -62,6 +61,6 @@ conditions = {
     'system-shutdown':	{'code': '200', 'type': 'terminate'},
     'undefined-condition':	{'code': '200', 'type': 'terminate'},
     'item-not-found':		{'code': '200', 'type': 'terminate'},
-    
+
 }
 

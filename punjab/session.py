@@ -96,7 +96,7 @@ class WaitingRequest(object):
         self.timeout     = timeout
         self.wait_start  = time.time()
         self.rid         = rid
-        
+
     def doCallback(self, data):
         """ """
         self.deferred.callback(data)
@@ -116,20 +116,20 @@ class Session(jabber.JabberClientFactory, server.Session):
             self.charset = str(attrs['charset'])
         else:
             self.charset = 'utf-8'
-        
+
         self.to    = attrs['to']
         self.port  = 5222
         self.inactivity = 900
         if self.to != '' and self.to.find(":") != -1:
             # Check if port is in the 'to' string
             to, port = self.to.split(':')
-            
+
             if port:
                 self.to   = to
                 self.port = int(port)
             else:
                 self.port = 5222
-        
+
         self.sid = "".join("%02x" % ord(i) for i in os.urandom(20))
 
         jabber.JabberClientFactory.__init__(self, self.to, pint.v)
@@ -146,22 +146,22 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.use_raw = attrs.get('raw', False)
 
         self.raw_buffer = u""
-        self.xmpp_node  = ''       
-        self.success    = 0        
+        self.xmpp_node  = ''
+        self.success    = 0
         self.mechanisms = []
         self.xmlstream  = None
         self.features   = None
         self.session    = None
-        
+
         self.cache_data = {}
         self.verbose    = self.pint.v
         self.noisy      = self.verbose
 
         self.version = attrs.get('version', 0.0)
-                
+
         self.key = attrs.get('newkey')
-        
-        self.wait  = int(attrs.get('wait', 0))            
+
+        self.wait  = int(attrs.get('wait', 0))
 
         self.hold  = int(attrs.get('hold', 0))
         self.inactivity = int(attrs.get('inactivity', 900)) # default inactivity 15 mins
@@ -175,7 +175,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             self.polling  = int(attrs['polling'])
         else:
             self.polling  = 0
-           
+
         if attrs.has_key('port'):
             self.port = int(attrs['port'])
 
@@ -183,7 +183,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             self.hostname = attrs['hostname']
         else:
             self.hostname = self.to
-            
+
         self.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
 
         self.secure = attrs.has_key('secure') and attrs['secure'] == 'true'
@@ -203,16 +203,16 @@ class Session(jabber.JabberClientFactory, server.Session):
             else:
                 raise error.Error('internal-server-error')
 
-            
-        self.authid      = 0    
+
+        self.authid      = 0
         self.rid         = rid + 1
-        self.connected   = 0 # number of clients connected on this session 
+        self.connected   = 0 # number of clients connected on this session
 
         self.notifyOnExpire(self.onExpire)
         self.stream_error = None
         if pint.v:
             log.msg('Session Created : %s %s' % (str(self.sid),str(time.time()), ))
-        
+        self.stream_error_called = False
         self.addBootstrap(xmlstream.STREAM_START_EVENT, self.streamStart)
         self.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, self.connectEvent)
         self.addBootstrap(xmlstream.STREAM_ERROR_EVENT, self.streamError)
@@ -222,12 +222,12 @@ class Session(jabber.JabberClientFactory, server.Session):
         d = defer.Deferred()
         timeout = 30
         rid = self.rid - 1
-        self.appendWaitingRequest(d, rid, 
-                                  timeout=timeout, 
+        self.appendWaitingRequest(d, rid,
+                                  timeout=timeout,
                                   poll=self._startup_timeout,
                                   startup=True,
                                   )
-        
+
     def rawDataIn(self, buf):
         """ Log incoming data on the xmlstream """
         if self.pint.v:
@@ -241,7 +241,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             # add some raw data
             self.raw_buffer = self.raw_buffer + buf
 
-        
+
     def rawDataOut(self, buf):
         """ Log outgoing data on the xmlstream """
         try:
@@ -260,7 +260,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         """clear number of requests given
 
            hold - number of requests to clear, default is all
-        """ 
+        """
         while len(self.waiting_requests) > hold:
             self._wrPop([])
 
@@ -299,26 +299,26 @@ class Session(jabber.JabberClientFactory, server.Session):
         if self.verbose and not getattr(self, 'terminated', False):
             log.msg('SESSION -> We have expired', self.sid, self.rid, self.waiting_requests)
         self.disconnect()
-    
+
     def terminate(self):
         """Terminates the session."""
         self.wait = 0
         self.terminated = True
         if self.verbose:
             log.msg('SESSION -> Terminate')
-        
+
         # if there are any elements hanging around and waiting
         # requests, send those off
         self.returnWaitingRequests()
-        
+
         self.clearWaitingRequests()
 
         try:
             self.expire()
         except:
             self.onExpire()
-        
-                
+
+
         return defer.succeed(self.elems)
 
     def poll(self, d = None, rid = None):
@@ -333,13 +333,13 @@ class Session(jabber.JabberClientFactory, server.Session):
         if d is None:
             d = defer.Deferred()
         if self.pint.error:
-            d.addErrback(self.pint.error)    
+            d.addErrback(self.pint.error)
         if not rid:
             rid = self.rid - 1
         self.appendWaitingRequest(d, rid)
         # check if there is any data to send back to a request
         self.returnWaitingRequests()
-        
+
         # make sure we aren't queueing too many requests
         self.clearWaitingRequests(self.hold)
         return d
@@ -365,81 +365,81 @@ class Session(jabber.JabberClientFactory, server.Session):
         if self.xmlstream.sid:
             self.authid = self.xmlstream.sid
         self._pollTimeout(d)
-        
 
-        
+
+
     def connectEvent(self, xs):
 
         self.version =  self.authenticator.version
         self.xmlstream = xs
         if self.pint.v:
             # add logging for verbose output
-            
+
             self.xmlstream.rawDataOutFn = self.rawDataOut
         self.xmlstream.rawDataInFn = self.rawDataIn
 
         if self.version == '1.0':
             self.xmlstream.addObserver("/features", self.featuresHandler)
-            
 
-            
+
+
     def streamStart(self, xs):
         """
         A xmpp stream has started
         """
         # This is done to fix the stream id problem, I should submit a bug to twisted bugs
-        
+
         try:
-            
+
             self.authid    = self.xmlstream.sid
-            
+
             if not self.attrs.has_key('no_events'):
-                
+
                 self.xmlstream.addOnetimeObserver("/auth", self.stanzaHandler)
                 self.xmlstream.addOnetimeObserver("/response", self.stanzaHandler)
                 self.xmlstream.addOnetimeObserver("/success", self._saslSuccess)
-                self.xmlstream.addOnetimeObserver("/failure", self._saslError)                    
-                
+                self.xmlstream.addOnetimeObserver("/failure", self._saslError)
+
                 self.xmlstream.addObserver("/iq/bind", self.bindHandler)
                 self.xmlstream.addObserver("/bind", self.stanzaHandler)
-                
+
                 self.xmlstream.addObserver("/challenge", self.stanzaHandler)
                 self.xmlstream.addObserver("/message",  self.stanzaHandler)
                 self.xmlstream.addObserver("/iq",  self.stanzaHandler)
                 self.xmlstream.addObserver("/presence",  self.stanzaHandler)
                 # TODO - we should do something like this
                 # self.xmlstream.addObserver("/*",  self.stanzaHandler)
-                
+
         except:
             log.err(traceback.print_exc())
             self._wrError(error.Error("remote-connection-failed"))
             self.disconnect()
-            
+
 
     def featuresHandler(self, f):
         """
         handle stream:features
         """
         f.prefixes   = ns.XMPP_PREFIXES.copy()
-        
+
         #check for tls
         self.f = {}
         for feature in f.elements():
             self.f[(feature.uri, feature.name)] = feature
-        
+
         starttls = (ns.TLS_XMLNS, 'starttls') in self.f
-        
+
         initializers   = getattr(self.xmlstream, 'initializers', [])
         self.features = f
         self.xmlstream.features = f
-                
+
         # There is a tls initializer added by us, if it is available we need to try it
         if len(initializers)>0 and starttls:
             self.secure = True
 
         if self.authid is None:
             self.authid = self.xmlstream.sid
-        
+
 
         # If we get tls, then we should start tls, wait and then return
         # Here we wait, the tls initializer will start it
@@ -453,7 +453,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             self.returnWaitingRequests()
             self.elems = [] # reset elems
             self.raw_buffer = u"" # reset raw buffer, features should not be in it
-    
+
     def bindHandler(self, stz):
         """bind debugger for punjab, this is temporary! """
         if self.verbose:
@@ -463,7 +463,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 log.err()
         if self.use_raw:
             self.raw_buffer = stz.toXml()
-        
+
     def stanzaHandler(self, stz):
         """generic stanza handler for httpbind and httppoll"""
         stz.prefixes = ns.XMPP_PREFIXES
@@ -471,7 +471,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             stz = domish.SerializedXML(self.raw_buffer)
             self.raw_buffer = u""
 
-        self.elems.append(stz)            
+        self.elems.append(stz)
         if self.waiting_requests and len(self.waiting_requests) > 0:
             # if there are any waiting requests, give them all the
             # data so far, plus this new data
@@ -490,36 +490,36 @@ class Session(jabber.JabberClientFactory, server.Session):
                     self._wrPop(self.elems, i=i)
                 else:
                     self._wrError(error.Error("remote-connection-failed"), i=i)
-                    
-    
+
+
     def buildRemoteError(self, err_elem=None):
-        e = error.Error('remote-stream-error')
-        e.error_stanza = 'remote-stream-error'
+        # This may not be a stream error, such as an XML parsing error.
+        # So expose it as remote-connection-failed.
+        err = 'remote-connection-failed'
+        if err_elem is not None:
+            # This is an actual stream:error.  Create a remote-stream-error to encapsulate it.
+            err = 'remote-stream-error'
+        e = error.Error(err)
+        e.error_stanza = err
         e.children = []
-        if err_elem:
-            e.children.append(err_elem)            
+        if err_elem is not None:
+            e.children.append(err_elem)
         return e
 
     def streamError(self, streamerror):
         """called when we get a stream:error stanza"""
-        
-        if isinstance(streamerror.value, jabber_protocol.error.StreamError):
-            # This is an actual stream:error.  Create a remote-stream-error to encapsulate it.
-            err_elem = getattr(streamerror.value, "element")
-            e = self.buildRemoteError(err_elem)
-        else:
-            # This is another error, such as an XML parsing error.  This isn't a stream:error,
-            # so expose it as remote-connection-failed.
-            e = error.Error('remote-connection-failed')
+        self.stream_error_called = True
+        err_elem = getattr(streamerror.value, "element", None)
+        e = self.buildRemoteError(err_elem)
 
         do_expire = True
-        
+
         if len(self.waiting_requests) > 0:
-            wr = self.waiting_requests.pop(0)            
+            wr = self.waiting_requests.pop(0)
             wr.doErrback(e)
         else: # need to wait for a new request and then expire
             do_expire = False
-            
+
         if self.pint and self.pint.sessions.has_key(self.sid):
             if do_expire:
                 try:
@@ -529,11 +529,12 @@ class Session(jabber.JabberClientFactory, server.Session):
             else:
                 s = self.pint.sessions.get(self.sid)
                 s.stream_error = e
-                                
+
 
     def connectError(self, xs):
         """called when we get disconnected"""
-        
+        if self.stream_error_called: return
+
         # If the connection was established and lost, then we need to report the error
         # back to the client, since he needs to reauthenticate.  FIXME: If the connection was
         # lost before anything happened, we could silently retry instead.
@@ -541,10 +542,10 @@ class Session(jabber.JabberClientFactory, server.Session):
             log.msg('connect ERROR')
             try:
                 log.msg(xs)
-                
+
             except:
                 pass
-            
+
 
         self.stopTrying()
 
@@ -575,8 +576,8 @@ class Session(jabber.JabberClientFactory, server.Session):
         """
         self.touch()
         self._send(obj)
-    
-    
+
+
     def _send(self, xml):
         """
         Send valid data over the xmlstream
@@ -599,36 +600,36 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         for priority, query in emptyLists:
             del observers[priority][query]
-    
+
     def disconnect(self):
         """
         Disconnect from the xmpp server.
         """
         if not getattr(self, 'xmlstream',None):
             return
-        
+
         if self.xmlstream:
             #sh = "<presence type='unavailable' xmlns='jabber:client'/>"
             sh = "</stream:stream>"
             self.xmlstream.send(sh)
-            
+
         self.stopTrying()
         if self.xmlstream:
             self.xmlstream.transport.loseConnection()
-         
+
             del self.xmlstream
         self.connected = 0
         self.pint      = None
         self.elems     = []
-        
+
         if self.waiting_requests:
             self.clearWaitingRequests()
             del self.waiting_requests
         self.mechanisms = None
         self.features   = None
-        
 
-    
+
+
     def checkExpired(self):
         """
         Check if the session or xmpp connection has expired
@@ -640,19 +641,19 @@ class Session(jabber.JabberClientFactory, server.Session):
             wait = 900
         elif self.inactivity == 0:
             wait = time.time()
-        
+
         else:
             wait = self.inactivity
 
         if self.waiting_requests and len(self.waiting_requests)>0:
             wait += self.wait # if we have pending requests we need to add the wait time
-            
+
         if time.time() - self.lastModified > wait+(0.1):
             if self.site.sessions.has_key(self.uid):
                 self.terminate()
             else:
                 pass
-             
+
         else:
             reactor.callLater(wait, self.checkExpired)
 
@@ -663,15 +664,15 @@ class Session(jabber.JabberClientFactory, server.Session):
             keys = self.cache_data.keys()
             keys.sort()
             del self.cache_data[keys[0]]
-        
+
         self.cache_data[int(rid)] = data
-        
+
 # This stuff will leave when SASL and TLS are implemented correctly
 # session stuff
 
     def _sessionResultEvent(self, iq):
         """ """
-	if len(self.waiting_requests)>0:		
+	if len(self.waiting_requests)>0:
 		wr = self.waiting_requests.pop(0)
 		d  = wr.deferred
 	else:
@@ -701,8 +702,8 @@ class Session(jabber.JabberClientFactory, server.Session):
 
     def _saslError(self, sasl_error, d = None):
         """ SASL error """
-        
+
         if d:
             d.errback(self)
-        if len(self.waiting_requests)>0:		
+        if len(self.waiting_requests)>0:
             self._wrPop([sasl_error])

@@ -475,7 +475,6 @@ class Httpb(resource.Resource):
 
     def return_error(self, e, request):
         echildren = []
-
         try:
             # TODO - clean this up and make errors better
             if getattr(e.value,'stanza_error',None):

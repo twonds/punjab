@@ -1,5 +1,6 @@
 
 import os
+import os.path
 import random
 from twisted.trial import unittest
 
@@ -30,8 +31,10 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         # set up punjab
-        os.mkdir("./html") # create directory in _trial_temp
-        self.root = static.File("./html") # make _trial_temp/html the root html directory
+        html_dir = "./html"
+        if not os.path.exists(html_dir):
+            os.mkdir(html_dir) # create directory in _trial_temp
+        self.root = static.File(html_dir) # make _trial_temp/html the root html directory
         self.rid = random.randint(0,10000000)
         self.hbs = HttpbService(1)
         self.b = resource.IResource(self.hbs)

@@ -1,4 +1,4 @@
-# XMPP server class 
+# XMPP server class
 
 from twisted.application import service
 from twisted.python import components
@@ -32,16 +32,16 @@ class IXMPPAuthenticationFeature(IXMPPFeature):
 
 class IQAuthFeature(object):
     """ XEP-0078 : http://www.xmpp.org/extensions/xep-0078.html"""
-    
+
     implements(IXMPPAuthenticationFeature)
-    
-    
+
+
     IQ_GET_AUTH = xpath.internQuery(ns.IQ_GET_AUTH)
     IQ_SET_AUTH = xpath.internQuery(ns.IQ_SET_AUTH)
-    
-    
+
+
     def associateWithStream(self, xs):
-        """Add a streamm start event observer. 
+        """Add a streamm start event observer.
            And do other things to associate with the xmlstream if necessary.
         """
         self.xmlstream = xs
@@ -54,7 +54,7 @@ class IQAuthFeature(object):
         self.xmlstream.removeObserver(self.IQ_SET_AUTH,
                                       self.auth)
         self.xmlstream = None
-       
+
 
     def streamStarted(self, elm):
         """
@@ -82,7 +82,7 @@ class IQAuthFeature(object):
 
     def auth(self, elem):
         """Do not auth the user, anyone can log in"""
-        
+
         username = elem.query.username.__str__()
         resource = elem.query.resource.__str__()
 
@@ -93,7 +93,7 @@ class IQAuthFeature(object):
         resp['id'] = elem['id']
 
         self.xmlstream.send(resp)
-        
+
         self.xmlstream.authenticated(user)
 
 
@@ -106,28 +106,28 @@ class XMPPServerProtocol(xmlstream.XmlStream):
     id = 'Punjab123'
     features = [IQAuthFeature()]
     delay_features = 0
-    
+
     def connectionMade(self):
         """
         a client connection has been made
         """
         xmlstream.XmlStream.connectionMade(self)
-                
+
         self.bootstraps = [
             (xmlstream.STREAM_CONNECTED_EVENT, self.streamConnected),
             (xmlstream.STREAM_START_EVENT, self.streamStarted),
             (xmlstream.STREAM_END_EVENT, self.streamEnded),
             (xmlstream.STREAM_ERROR_EVENT, self.streamErrored),
             ]
-        
+
         for event, fn in self.bootstraps:
             self.addObserver(event, fn)
-            
+
         # load up the authentication features
         for f in self.features:
             if IXMPPAuthenticationFeature.implementedBy(f.__class__):
                 f.associateWithStream(self)
-                
+
     def send(self, obj):
         if not self.initialized:
             self.transport.write("""<?xml version="1.0"?>\n""")
@@ -140,7 +140,7 @@ class XMPPServerProtocol(xmlstream.XmlStream):
 
     def streamStarted(self, elm):
         """stream has started, we need to respond
-        
+
         """
         if self.delay_features == 0:
             self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'><stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""" % (ns.NS_CLIENT, self.host, self.id,))
@@ -150,10 +150,10 @@ class XMPPServerProtocol(xmlstream.XmlStream):
 
     def streamEnded(self, elm):
         self.send("""</stream:stream>""")
-        
+
     def streamErrored(self, elm):
         self.send("""<stream:error/></stream:stream>""")
-        
+
     def authenticated(self, user):
         """User has authenticated.
         """
@@ -165,14 +165,14 @@ class XMPPServerProtocol(xmlstream.XmlStream):
         except Exception, e:
             print "Exception!", e
             raise e
-        
+
     def onDocumentEnd(self):
         pass
-    
+
     def connectionLost(self, reason):
         xmlstream.XmlStream.connectionLost(self, reason)
         pass
-    
+
     def triggerChallenge(self):
         """ send a fake challenge for testing
         """
@@ -196,18 +196,18 @@ class XMPPServerProtocol(xmlstream.XmlStream):
 """)
         self.streamEnded(None)
 
-        
+
 
 class XMPPServerFactoryFromService(xmlstream.XmlStreamFactory):
     implements(IXMPPServerFactory)
 
     protocol = XMPPServerProtocol
-    
+
     def __init__(self, service):
         xmlstream.XmlStreamFactory.__init__(self)
         self.service = service
 
-        
+
     def buildProtocol(self, addr):
         self.resetDelay()
         xs = self.protocol()
