@@ -1,4 +1,6 @@
 # punjab tac file
+# tac documentation is at the following URL:
+# http://twistedmatrix.com/documents/current/core/howto/application.html
 from twisted.web import server, resource, static
 from twisted.application import service, internet
 
@@ -25,3 +27,4 @@ site  = server.Site(root)
 application = service.Application("punjab")
 internet.TCPServer(5280, site).setServiceParent(application)
 
+# To run this simply to twistd -y punjab.tac
