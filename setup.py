@@ -2,7 +2,7 @@ from distutils.core import setup
 
 
 setup(name='punjab',
-      version='0.14',
+      version='0.15',
       description='Punjab, a twisted HTTP server with interfaces to XMPP.',
       author='Christopher Zorn',
       author_email='tofu@thetofu.com',
