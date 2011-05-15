@@ -11,7 +11,7 @@ root = static.File("./html")
 # uncomment only one of the bosh lines, use_raw does no xml
 # parsing/serialization but is potentially less reliable
 #bosh = HttpbService(1, use_raw=True)
-bosh = HttpbService(1)
+bosh = HttpbService()
 
 # You can limit servers with a whitelist.
 # The whitelist is a list of strings to match domain names.

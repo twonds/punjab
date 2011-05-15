@@ -347,13 +347,21 @@ class Httpb(resource.Resource):
         """
         GET is not used, print docs.
         """
+        # active sessions message
+        active = len(self.service.sessions)
+        if active>1:
+            sessmsg = str(active) + " active sessions"
+        else:
+            sessmsg = str(active) + " active session"
+        
+        # cors headers
         request.setHeader('Access-Control-Allow-Origin', '*')
         request.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-        return """<html>
-                 <body>
-                 <a href='http://www.xmpp.org/extensions/xep-0124.html'>XEP-0124</a> - BOSH
-                 </body>
-               </html>"""
+        
+        # html content
+        html = "<!DOCTYPE html>\n<html>\n <head>\n <title>Punjab</title>\n </head>\n \n <body>\n <h1><a href='https://github.com/twonds/punjab'>Punjab</a></h1>\n <h3><a href='http://xmpp.org/extensions/xep-0124.html'>XEP-0124</a>: Bidirectional-streams Over Synchronous HTTP (BOSH)</h3>\n <p>" + sessmsg + "</p>\n </body>\n</html>"
+        
+        return html
 
     def render_POST(self, request):
         """
