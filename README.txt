@@ -29,3 +29,4 @@ CONTRIBUTORS
 Jack Moffitt xmpp:jackm@jabber.org
 Garret Heaton <powdahound@gmail.com>
 Zewt (https://github.com/zewt)
+Valérian Saliou xmpp:vanaryon@jappix.com
