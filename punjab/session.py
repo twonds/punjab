@@ -3,7 +3,7 @@
 
 """
 from twisted.internet import defer,  reactor
-from twisted.python import log
+from twisted.python import failure, log
 from twisted.web import server
 from twisted.names.srvconnect import SRVConnector
 
@@ -530,22 +530,23 @@ class Session(jabber.JabberClientFactory, server.Session):
                 s = self.pint.sessions.get(self.sid)
                 s.stream_error = e
 
-
-    def connectError(self, xs):
+    def connectError(self, reason):
         """called when we get disconnected"""
         if self.stream_error_called: return
 
-        # If the connection was established and lost, then we need to report the error
-        # back to the client, since he needs to reauthenticate.  FIXME: If the connection was
-        # lost before anything happened, we could silently retry instead.
+        # Before Twisted 11.x the xmlstream object was passed instead of the
+        # disconnect reason. See http://twistedmatrix.com/trac/ticket/2618
+        if not isinstance(reason, failure.Failure):
+            reason_str = 'Reason unknown'
+        else:
+            reason_str = str(reason)
+
+        # If the connection was established and lost, then we need to report
+        # the error back to the client, since he needs to reauthenticate.
+        # FIXME: If the connection was lost before anything happened, we could
+        # silently retry instead.
         if self.verbose:
-            log.msg('connect ERROR')
-            try:
-                log.msg(xs)
-
-            except:
-                pass
-
+            log.msg('connect ERROR: %s' % reason_str)
 
         self.stopTrying()
 
