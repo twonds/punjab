@@ -1,4 +1,4 @@
-Copyright (C) 2001-2010 Christopher Zorn , tofu@thetofu.com
+Copyright (C) 2001-2011 Christopher Zorn , tofu@thetofu.com
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -19,9 +19,6 @@ GENERAL INFORMATION
 PunJab is a HTTP jabber client interface. It is a BOSH connection manager that
 allows persistent client connections to a XMPP server.
 
-For more information about punjab see the following URL :
-
-http://code.stanziq.com/punjab
 
 
 CONTRIBUTORS
