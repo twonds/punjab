@@ -67,7 +67,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
 
-    connect_srv = True
+    connect_srv = self.connect_srv
     if attrs.has_key('route'):
         connect_srv = False
     if s.hostname in ['localhost', '127.0.0.1']:
@@ -185,6 +185,8 @@ class Session(jabber.JabberClientFactory, server.Session):
             self.hostname = self.to
 
         self.use_raw = getattr(pint, 'use_raw', False) # use raw buffers
+
+        self.connect_srv = getattr(pint, 'connect_srv', True)
 
         self.secure = attrs.has_key('secure') and attrs['secure'] == 'true'
         self.authenticator.useTls = self.secure
