@@ -67,7 +67,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     if pint.v:
         log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
 
-    connect_srv = self.connect_srv
+    connect_srv = s.connect_srv
     if attrs.has_key('route'):
         connect_srv = False
     if s.hostname in ['localhost', '127.0.0.1']:
