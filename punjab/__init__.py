@@ -90,7 +90,7 @@ def makeService(config):
 
     if config['ssl']:
         from OpenSSL import SSL
-        from punjab.OpenSSLContextFactoryChaining import OpenSSLContextFactoryChaining
+        from punjab.ssh import OpenSSLContextFactoryChaining
         ssl_context = OpenSSLContextFactoryChaining(config['ssl_privkey'],
                                                        config['ssl_cert'],
                                                        SSL.SSLv23_METHOD,)
