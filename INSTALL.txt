@@ -20,19 +20,9 @@ Dependencies
 
 Please make sure all dependencies are met before submitting a troubleshooting question.
 
-- Python 2.5>
+- Python 2.6>=
 
-- Twisted >= 2.5
-
-  - Twisted-names
-  - Twisted-words >= 0.6.0
-  - Twisted-web  >= 0.5.0
-
-  Recommended
-    - Twisted-conch >= 0.5.0
-
-  NOTE :
-    You can download all of these packages with the Twisted Sumo package.
+- Twisted 11.1>=
     http://twistedmatrix.com/
 
 - pyopenssl - if you want tls to work.
