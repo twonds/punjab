@@ -176,7 +176,7 @@ class XEP0124TestCase(test_basic.TestCase):
             self.assertEqual(res.value.body_tag['condition'], 'remote-stream-error')
             self.assertEqual(True, len(res.value.elements)>0)
             # The XML should exactly match the error XML sent by triggerStreamError().
-            self.assertEqual(True,xpath.XPathQuery("/error[@attrib='1']").matches(res.value.elements[0]))
+            self.assertEqual(True,xpath.XPathQuery("/error").matches(res.value.elements[0]))
             self.assertEqual(True,xpath.XPathQuery("/error/policy-violation").matches(res.value.elements[0]))
             self.assertEqual(True,xpath.XPathQuery("/error/arbitrary-extension").matches(res.value.elements[0]))
             self.assertEqual(True,xpath.XPathQuery("/error/text[text() = 'Error text']").matches(res.value.elements[0]))
