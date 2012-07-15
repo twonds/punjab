@@ -485,6 +485,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         # but never got a stream features before the timeout
         if self.pint.v:
             log.msg('================================== %s %s startup timeout ==================================' % (str(self.sid), str(time.time()),))
+
         for i in range(len(self.waiting_requests)):
             if self.waiting_requests[i].deferred == d:
                 # check if we really failed or not
@@ -511,7 +512,11 @@ class Session(jabber.JabberClientFactory, server.Session):
     def streamError(self, streamerror):
         """called when we get a stream:error stanza"""
         self.stream_error_called = True
-        err_elem = getattr(streamerror.value, "element", None)
+        try:
+            err_elem = streamerror.value.getElement()
+        except AttributeError:
+            err_elem = None
+
         e = self.buildRemoteError(err_elem)
 
         do_expire = True
@@ -535,7 +540,6 @@ class Session(jabber.JabberClientFactory, server.Session):
     def connectError(self, reason):
         """called when we get disconnected"""
         if self.stream_error_called: return
-
         # Before Twisted 11.x the xmlstream object was passed instead of the
         # disconnect reason. See http://twistedmatrix.com/trac/ticket/2618
         if not isinstance(reason, failure.Failure):

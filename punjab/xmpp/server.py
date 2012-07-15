@@ -188,12 +188,11 @@ class XMPPServerProtocol(xmlstream.XmlStream):
         """ send a stream error
         """
         self.send("""
-        <stream:error attrib="1" xmlns:stream='http://etherx.jabber.org/streams'>
+        <stream:error xmlns:stream='http://etherx.jabber.org/streams'>
             <policy-violation xmlns='urn:ietf:params:xml:ns:xmpp-streams'/>
             <text xmlns='urn:ietf:params:xml:ns:xmpp-streams' xml:lang='langcode'>Error text</text>
             <arbitrary-extension val='2'/>
-        </stream:error>
-""")
+        </stream:error>""")
         self.streamEnded(None)
 
 

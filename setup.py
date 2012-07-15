@@ -29,6 +29,7 @@ setup(name='punjab',
       description='Punjab, a twisted HTTP server with interfaces to XMPP.',
       author='Christopher Zorn',
       author_email='tofu@thetofu.com',
+      zip_safe=False,
       url='https://github.com.com/twonds/punjab',
       packages=['punjab','punjab.xmpp', 'twisted.plugins'],
       package_data={'twisted.plugins': ['twisted/plugins/punjab.py']}
