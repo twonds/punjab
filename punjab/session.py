@@ -40,13 +40,13 @@ class XMPPClientConnector(SRVConnector):
     """
     def __init__(self, client_reactor, domain, factory):
         """ Init """
-        SRVConnector.__init__(self, client_reactor, 'xmpp-client', domain, factory)
         if isinstance(domain, unicode):
             warnings.warn(
                 "Domain argument to XMPPClientConnector should be bytes, "
                 "not unicode",
                 stacklevel=2)
             domain = domain.encode('ascii')
+        SRVConnector.__init__(self, client_reactor, 'xmpp-client', domain, factory)
         self.timeout = [1,3]
 
     def pickServer(self):
