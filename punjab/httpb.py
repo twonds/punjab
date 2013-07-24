@@ -570,7 +570,7 @@ class HttpbService(punjab.Service):
 
     def __init__(self,
                  verbose = 0, polling = 15,
-                 use_raw = False, bindAddress=("0.0.0.0", 0),
+                 use_raw = False, bindAddress=None,
                  session_creator = None):
         if session_creator is not None:
             self.make_session = session_creator
