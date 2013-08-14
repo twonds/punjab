@@ -13,6 +13,10 @@ Punjab can be located at the punjab web site,
 
    http://github.com/twonds/punjab
 
+You can also download a debian package at the following URL:
+
+https://launchpad.net/~karjala/+archive/jabber
+
 
 -------------
 Dependencies
