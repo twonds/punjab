@@ -22,4 +22,4 @@ install:
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
 
 script:
-  - trial treq
+  - trial punjab
