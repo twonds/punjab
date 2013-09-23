@@ -1,0 +1,25 @@
+language: python
+
+python:
+    - 2.6
+    - 2.7
+    - pypy
+
+env:
+  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==13.0.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==12.3.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==12.2.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==12.1.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=
+  - TWISTED=Twisted==13.0.0 PYOPENSSL=
+  - TWISTED=Twisted==12.3.0 PYOPENSSL=
+  - TWISTED=Twisted==12.2.0 PYOPENSSL=
+  - TWISTED=Twisted==12.1.0 PYOPENSSL=
+
+install:
+  - pip install $TWISTED --use-mirrors
+  - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
+
+script:
+  - trial treq
