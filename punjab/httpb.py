@@ -441,7 +441,6 @@ class Httpb(resource.Resource):
             b['secure'] = 'true'
 
         b['inactivity'] = str(session.inactivity)
-        ##b['polling'] = '15' # TODO: make this configurable
         b['polling'] = str(self.polling)
         b['requests'] = str(session.hold + 1)
         b['window'] = str(session.window)

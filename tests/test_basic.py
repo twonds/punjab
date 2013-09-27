@@ -140,7 +140,6 @@ class TestCase(unittest.TestCase):
             d.addCallback(self._storeSID)
         return d
 
-        
 
     def _error(self, e):
         # self.fail(e)
@@ -154,21 +153,14 @@ class TestCase(unittest.TestCase):
                     p.cancel()
 
     def _cleanSelectables(self):
-        removedSelectables = reactor.removeAll()
-        # Below is commented out to remind us how to see what selectable is sticking around
-        #if removedSelectables:
-        #    for sel in removedSelectables:
-        #        # del sel
-        #        print sel.__class__
-        #        print dir(sel)
-        
+        reactor.removeAll()
+
     def tearDown(self):
         def cbStopListening(result=None):
-            
             self.root = None
             self.site = None
             self.proxy.factory.stopFactory()
-            self.server_factory.stopFactory()            
+            self.server_factory.stopFactory()
             self.server = None
             self._cleanPending()
             self._cleanSelectables()
@@ -184,7 +176,6 @@ class TestCase(unittest.TestCase):
         if hasattr(self.proxy.factory,'client'):
             self.proxy.factory.client.transport.stopConnecting()
         self.server_factory.protocol.delay_features = 0
-        
 
         d = defer.maybeDeferred(self.server.stopListening)
         d.addCallback(cbStopListening)

@@ -10,14 +10,14 @@ import punjab
 
 class Options(usage.Options):
     optParameters = [
-        ('host', None, 'localhost'),
-        ('port', None, 5280),
-        ('httpb', 'b', "http-bind"),
-        ('polling', None, '15'),
-        ('html_dir', None, "./html"),
-        ('ssl', None, None),
-        ('ssl_privkey', None, "ssl.key"),
-        ('ssl_cert', None, "ssl.crt"),
+        ('host', None, 'localhost', "The hostname sent in the HTTP header of BOSH requests"),
+        ('port', None, 5280, "HTTP Port for BOSH connections"),
+        ('httpb', 'b', "http-bind", "URL path for BOSH resource."),
+        ('polling', None, '15', "Seconds allowed between client polling requests"),
+        ('html_dir', None, "./html", "The path were static html files are served."),
+        ('ssl', None, None, "A flag to turn on ssl for BOSH requests"),
+        ('ssl_privkey', None, "ssl.key", "SSL private key location"),
+        ('ssl_cert', None, "ssl.crt", "SSL certificate location"),
         ('white_list', None, None,
             'Comma separated list of domains to allow connections to. \
             Begin an entry with a period to allow connections to subdomains. \
@@ -29,7 +29,7 @@ class Options(usage.Options):
     ]
 
     optFlags = [
-        ('verbose', 'v', 'Show traffic'),
+        ('verbose', 'v', 'Show traffic and verbose logging.'),
     ]
 
 class ServiceFactory(object):
