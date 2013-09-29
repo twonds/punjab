@@ -22,4 +22,4 @@ install:
   - python setup.py install
 
 script:
-  - cd tests;trial xep124
+  - cd tests;trial xep124;trial testparser
