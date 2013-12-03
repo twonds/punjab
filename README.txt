@@ -1,3 +1,22 @@
+GENERAL INFORMATION
+
+PunJab is a HTTP jabber client interface. It is a BOSH connection manager that
+allows persistent client connections to a XMPP server.
+
+INSTALL
+
+See INSTALL.txt for setup and installation instructions.
+
+CONTRIBUTORS
+
+Jack Moffitt xmpp:jackm@jabber.org
+
+Garret Heaton <powdahound@gmail.com>
+
+Zewt (https://github.com/zewt)
+
+COPYRIGHT AND WARRANTY
+
 Copyright (C) 2001-2013 Christopher Zorn , tofu@thetofu.com
 
  This program is free software; you can redistribute it and/or
@@ -14,15 +33,3 @@ Copyright (C) 2001-2013 Christopher Zorn , tofu@thetofu.com
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-GENERAL INFORMATION
-
-PunJab is a HTTP jabber client interface. It is a BOSH connection manager that
-allows persistent client connections to a XMPP server.
-
-
-
-CONTRIBUTORS
-
-Jack Moffitt xmpp:jackm@jabber.org
-Garret Heaton <powdahound@gmail.com>
-Zewt (https://github.com/zewt)
