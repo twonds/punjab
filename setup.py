@@ -24,9 +24,13 @@ else:
     egg_info.write_toplevel_names = _hacked_write_toplevel_names
 
 
+with open('README.txt') as file:
+    long_description = file.read()
+
 setup(name='punjab',
       version='0.15',
-      description='Punjab, a twisted HTTP server with interfaces to XMPP.',
+      description='Punjab, a twisted BOSH server.',
+      long_description = long_description,
       author='Christopher Zorn',
       author_email='tofu@thetofu.com',
       zip_safe=False,
