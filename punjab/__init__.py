@@ -85,7 +85,10 @@ def makeService(config):
         else:
             r.putChild(config['httpb'], resource.IResource(b))
 
-    site  = server.Site(r)
+    if config['site_log_file']:
+        site  = server.Site(r, logPath=config['site_log_file'])
+    else:
+        site  = server.Site(r)
 
     if config['ssl']:
         from OpenSSL import SSL
