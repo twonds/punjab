@@ -26,6 +26,10 @@ class Options(usage.Options):
          'Comma separated list of domains to deny connections to. ' \
          'Begin an entry with a period to deny connections to subdomains. '\
          'e.g.: --black_list=.example.com,domain.com'),
+        ('site_log_file', None, None,
+         'File path where the site access logs will be written. ' \
+         'This overrides the twisted default logging. ' \
+         'e.g.: --site_log_file=/var/log/punjab.access.log'),
     ]
 
     optFlags = [
