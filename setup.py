@@ -34,7 +34,7 @@ setup(name='punjab',
       author='Christopher Zorn',
       author_email='tofu@thetofu.com',
       zip_safe=False,
-      url='https://github.com.com/twonds/punjab',
+      url='https://github.com/twonds/punjab',
       packages=['punjab','punjab.xmpp', 'twisted.plugins'],
       package_data={'twisted.plugins': ['twisted/plugins/punjab.py']}
       )
