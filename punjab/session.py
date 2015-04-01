@@ -71,23 +71,29 @@ def make_session(pint, attrs, session_type='BOSH'):
 
     s    = Session(pint, attrs)
 
-    if pint.v:
-        log.msg('================================== %s connect to %s:%s ==================================' % (str(time.time()),s.hostname,s.port))
+    log.msg("make_session: connect to {}:{}, sid-{}"
+            .format(s.hostname, s.port, s.sid))
 
     connect_srv = s.connect_srv
     if attrs.has_key('route'):
+        log.msg("route: {}, sid-{}".format(attrs['route'], s.sid))
         connect_srv = False
     if s.hostname in ['localhost', '127.0.0.1']:
+        log.msg("hostname: {}, sid-{}".format(s.hostname, s.sid))
         connect_srv = False
     if not connect_srv:
+        log.msg("Connecting directly, sid-{}".format(s.sid))
         reactor.connectTCP(s.hostname, s.port, s, bindAddress=pint.bindAddress)
     else:
+        log.msg("Connecting using SRV records, sid-{}".format(s.sid))
         connector = XMPPClientConnector(reactor, s.hostname, s)
         connector.connect()
     # timeout
     reactor.callLater(s.inactivity, s.checkExpired)
 
     pint.sessions[s.sid] = s
+
+    log.msg("{} sessions, sid-{}".format(len(pint.sessions), s.sid))
 
     return s, s.waiting_requests[0].deferred
 
@@ -219,8 +225,6 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         self.notifyOnExpire(self.onExpire)
         self.stream_error = None
-        if pint.v:
-            log.msg('Session Created : %s %s' % (str(self.sid),str(time.time()), ))
         self.stream_error_called = False
         self.addBootstrap(xmlstream.STREAM_START_EVENT, self.streamStart)
         self.addBootstrap(xmlstream.STREAM_CONNECTED_EVENT, self.connectEvent)
@@ -236,6 +240,8 @@ class Session(jabber.JabberClientFactory, server.Session):
                                   poll=self._startup_timeout,
                                   startup=True,
                                   )
+        log.msg('Session constructed: sid-{}, rid-{}, route: {}'
+                .format(self.sid, self.rid, self.route or None))
 
     def rawDataIn(self, buf):
         """ Log incoming data on the xmlstream """
@@ -253,10 +259,11 @@ class Session(jabber.JabberClientFactory, server.Session):
 
     def rawDataOut(self, buf):
         """ Log outgoing data on the xmlstream """
-        try:
-            log.msg("SID: %s => SEND: %r" % (self.sid, buf,))
-        except:
-            log.err()
+        if self.pint and self.pint.v:
+            try:
+                log.msg("SID: %s => SEND: %r" % (self.sid, buf,))
+            except:
+                log.err()
 
     def _wrPop(self, data, i=0):
         """Pop off a waiting requst, do callback, and cache request
@@ -303,18 +310,17 @@ class Session(jabber.JabberClientFactory, server.Session):
 
     def onExpire(self):
         """ When the session expires call this. """
-        if 'onExpire' in dir(self.pint):
+        if self.pint and 'onExpire' in dir(self.pint):
             self.pint.onExpire(self.sid)
-        if self.verbose and not getattr(self, 'terminated', False):
-            log.msg('SESSION -> We have expired', self.sid, self.rid, self.waiting_requests)
+        if not getattr(self, 'terminated', False):
+            log.msg('Session expired: sid-{}, {} waiting requests'.format(self.sid, len(self.waiting_requests)))
         self.disconnect()
 
     def terminate(self):
         """Terminates the session."""
         self.wait = 0
-        self.terminated = True
-        if self.verbose:
-            log.msg('SESSION -> Terminate')
+        setattr(self, 'terminated', True)
+        log.msg('Session terminated: sid-{}, {} waiting requests'.format(self.sid, len(self.waiting_requests)))
 
         # if there are any elements hanging around and waiting
         # requests, send those off
@@ -324,9 +330,11 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         try:
             self.expire()
-        except:
+        except Exception as e:
+            log.err("Error calling expire(): {}".format(e.message))
             self.onExpire()
 
+        log.msg("{} sessions remaining".format(len(self.site.sessions)))
 
         return defer.succeed(self.elems)
 
@@ -381,14 +389,12 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         self.version =  self.authenticator.version
         self.xmlstream = xs
-        if self.pint.v:
-            # add logging for verbose output
-
-            self.xmlstream.rawDataOutFn = self.rawDataOut
+        self.xmlstream.rawDataOutFn = self.rawDataOut
         self.xmlstream.rawDataInFn = self.rawDataIn
 
         if self.version == '1.0':
             self.xmlstream.addObserver("/features", self.featuresHandler)
+        log.msg("XMPP connected: {}, dir: {}".format(xs, dir(xs)))
 
 
 
@@ -423,6 +429,8 @@ class Session(jabber.JabberClientFactory, server.Session):
             log.err(traceback.print_exc())
             self._wrError(error.Error("remote-connection-failed"))
             self.disconnect()
+        log.msg("XMPP stream started: sid-{}, authid-{}, xs: {}, dir: {}"
+                .format(self.sid, self.authid, xs, dir(xs)))
 
 
     def featuresHandler(self, f):
@@ -490,8 +498,8 @@ class Session(jabber.JabberClientFactory, server.Session):
     def _startup_timeout(self, d):
         # this can be called if connection failed, or if we connected
         # but never got a stream features before the timeout
-        if self.pint.v:
-            log.msg('================================== %s %s startup timeout ==================================' % (str(self.sid), str(time.time()),))
+        log.msg('Startup timeout: sid-{}, {} waiting requests'
+                .format(self.sid, len(self.waiting_requests)))
 
         for i in range(len(self.waiting_requests)):
             if self.waiting_requests[i].deferred == d:
@@ -558,8 +566,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         # the error back to the client, since he needs to reauthenticate.
         # FIXME: If the connection was lost before anything happened, we could
         # silently retry instead.
-        if self.verbose:
-            log.msg('connect ERROR: %s' % reason_str)
+        log.msg('Connect error: %s' % reason_str)
 
         self.stopTrying()
 
@@ -622,6 +629,8 @@ class Session(jabber.JabberClientFactory, server.Session):
         if not getattr(self, 'xmlstream',None):
             return
 
+        log.msg("DISCONNECT called")
+
         if self.xmlstream:
             #sh = "<presence type='unavailable' xmlns='jabber:client'/>"
             sh = "</stream:stream>"
@@ -663,11 +672,10 @@ class Session(jabber.JabberClientFactory, server.Session):
             wait += self.wait # if we have pending requests we need to add the wait time
 
         if time.time() - self.lastModified > wait+(0.1):
-            if self.site.sessions.has_key(self.uid):
+            if self.site.sessions.has_key(self.uid):  # uid is alias for sid...
                 self.terminate()
             else:
-                pass
-
+                log.err("Session expired but sid not found: sid-{}".format(self.sid))
         else:
             reactor.callLater(wait, self.checkExpired)
 
