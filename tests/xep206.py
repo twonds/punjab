@@ -101,7 +101,7 @@ class DeliveryFailureTestCase(XEP0206TestCase):
         sentinel = domish.Element((None, 'presence'))
         self.session.elems.append(sentinel)
         self.session.disconnect()
-        assert sentinel not in self.xmlstream.elements
+        self.assertTrue(sentinel not in self.xmlstream.elements)
 
     def test_sends_messages(self):
         """
@@ -110,7 +110,7 @@ class DeliveryFailureTestCase(XEP0206TestCase):
         sentinel = domish.Element((None, 'message'))
         self.session.elems.append(sentinel)
         self.session.disconnect()
-        assert sentinel in self.xmlstream.elements
+        self.assertTrue(sentinel in self.xmlstream.elements)
 
     def test_sends_iq(self):
         """
@@ -119,7 +119,7 @@ class DeliveryFailureTestCase(XEP0206TestCase):
         sentinel = domish.Element((None, 'iq'))
         self.session.elems.append(sentinel)
         self.session.disconnect()
-        assert sentinel in self.xmlstream.elements
+        self.assertTrue(sentinel in self.xmlstream.elements)
 
     def test_errors_dont_bubble_up(self):
         """
