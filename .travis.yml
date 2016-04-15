@@ -6,15 +6,19 @@ python:
 
 env:
   - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=PyOpenSSL
-  - TWISTED=Twisted==13.0.0 PYOPENSSL=PyOpenSSL
-  - TWISTED=Twisted==12.3.0 PYOPENSSL=PyOpenSSL
-  - TWISTED=Twisted==12.2.0 PYOPENSSL=PyOpenSSL
-  - TWISTED=Twisted==12.1.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==16.1.1 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==16.1.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==16.0.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==15.5.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==15.4.0 PYOPENSSL=PyOpenSSL
+  - TWISTED=Twisted==15.3.0 PYOPENSSL=PyOpenSSL
   - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=
-  - TWISTED=Twisted==13.0.0 PYOPENSSL=
-  - TWISTED=Twisted==12.3.0 PYOPENSSL=
-  - TWISTED=Twisted==12.2.0 PYOPENSSL=
-  - TWISTED=Twisted==12.1.0 PYOPENSSL=
+  - TWISTED=Twisted==16.1.1 PYOPENSSL=
+  - TWISTED=Twisted==16.1.0 PYOPENSSL=
+  - TWISTED=Twisted==16.0.0 PYOPENSSL=
+  - TWISTED=Twisted==15.5.0 PYOPENSSL=
+  - TWISTED=Twisted==15.4.0 PYOPENSSL=
+  - TWISTED=Twisted==15.3.0 PYOPENSSL=
 
 install:
   - pip install $TWISTED --use-mirrors
