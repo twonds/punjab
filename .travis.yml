@@ -20,6 +20,7 @@ env:
   - TWISTED=Twisted==15.3.0 PYOPENSSL=
 
 install:
+  - pip install service_identity
   - pip install $TWISTED --use-mirrors
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
   - python setup.py install
