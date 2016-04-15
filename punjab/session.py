@@ -173,7 +173,7 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         self.window = int(attrs.get('window', self.hold+2))
         self.polling = int(attrs.get('polling', 0))
-        self.port = int(attrs.get('port'))
+        self.port = int(attrs.get('port', 0))
 
         self.hostname = attrs.get('hostname', self.to)
         # use raw buffers
