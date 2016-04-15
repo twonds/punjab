@@ -20,10 +20,12 @@ env:
   - TWISTED=Twisted==15.3.0 PYOPENSSL=
 
 install:
+  - pip install flake8
   - pip install service_identity
   - pip install $TWISTED --use-mirrors
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
   - python setup.py install
 
 script:
+  - flake8 punjab
   - cd tests;trial xep124;trial testparser;trial xep206

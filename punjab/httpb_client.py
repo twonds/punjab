@@ -8,32 +8,31 @@ from twisted.python import log, failure
 try:
     from twisted.words.xish import domish, utility
 except:
-    from twisted.xish import domish, utility
+    from twisted.xish import domish, utility  # noqa
 from twisted.web import http
 
 from twisted.words.protocols.jabber import xmlstream, client
 
-
-
-
-from punjab.httpb import HttpbParse # maybe use something else to seperate from punjab
+# maybe use something else to seperate from punjab
+from punjab.httpb import HttpbParse
 
 TLS_XMLNS = 'urn:ietf:params:xml:ns:xmpp-tls'
 SASL_XMLNS = 'urn:ietf:params:xml:ns:xmpp-sasl'
 BIND_XMLNS = 'urn:ietf:params:xml:ns:xmpp-bind'
 SESSION_XMLNS = 'urn:ietf:params:xml:ns:xmpp-session'
-
 NS_HTTP_BIND = "http://jabber.org/protocol/httpbind"
+
 
 class Error(Exception):
     stanza_error = ''
     punjab_error = ''
-    msg          = ''
-    def __init__(self, msg = None):
+    msg = ''
+
+    def __init__(self, msg=None):
         if msg:
             self.stanza_error = msg
             self.punjab_error = msg
-            self.msg          = msg
+            self.msg = msg
 
     def __str__(self):
         return self.stanza_error
@@ -47,17 +46,22 @@ class RemoteConnectionFailed(Error):
 class NodeNotFound(Error):
     msg = '404 not found'
 
+
 class NotAuthorized(Error):
     pass
+
 
 class NotImplemented(Error):
     pass
 
 
-
 # Exceptions raised by the client.
-class HTTPBException(Exception): pass
+class HTTPBException(Exception):
+    pass
+
+
 class HTTPBNetworkTerminated(HTTPBException):
+
     def __init__(self, body_tag, elements):
         self.body_tag = body_tag
         self.elements = elements
@@ -66,14 +70,15 @@ class HTTPBNetworkTerminated(HTTPBException):
         return self.body_tag.toXml()
 
 
-
 class XMPPAuthenticator(client.XMPPAuthenticator):
     """
     Authenticate against an xmpp server using BOSH
     """
 
+
 class QueryProtocol(http.HTTPClient):
     noisy = False
+
     def connectionMade(self):
         self.factory.sendConnected(self)
         self.sendBody(self.factory.cb)
@@ -81,7 +86,7 @@ class QueryProtocol(http.HTTPClient):
     def sendCommand(self, command, path):
         self.transport.write('%s %s HTTP/1.1\r\n' % (command, path))
 
-    def sendBody(self, b, close = 0):
+    def sendBody(self, b, close=0):
         if isinstance(b, domish.Element):
             bdata = b.toXml().encode('utf-8')
         else:
@@ -128,7 +133,7 @@ class QueryProtocol(http.HTTPClient):
 
     def handleResponseEnd(self):
         self.firstLine = 1
-        if self.__buffer != None:
+        if self.__buffer is not None:
             b = ''.join(self.__buffer)
 
             self.__buffer = None
@@ -137,10 +142,7 @@ class QueryProtocol(http.HTTPClient):
     def handleResponsePart(self, data):
         self.__buffer.append(data)
 
-
     def connectionLost(self, reason):
-        #log.msg(dir(reason))
-        #log.msg(reason)
         pass
 
 
@@ -150,12 +152,13 @@ class QueryFactory(protocol.ClientFactory):
     deferred = None
     noisy = False
     protocol = QueryProtocol
+
     def __init__(self, url, host, b):
         self.url, self.host = url, host
         self.deferred = defer.Deferred()
         self.cb = b
 
-    def send(self,b):
+    def send(self, b):
         self.deferred = defer.Deferred()
 
         self.client.sendBody(b)
@@ -165,29 +168,27 @@ class QueryFactory(protocol.ClientFactory):
     def parseResponse(self, contents, protocol):
         self.client = protocol
         hp = HttpbParse(True)
-
         try:
-            body_tag,elements = hp.parse(contents)
+            body_tag, elements = hp.parse(contents)
         except:
             raise
         else:
-            if body_tag.hasAttribute('type') and body_tag['type'] == 'terminate':
-                error = failure.Failure(HTTPBNetworkTerminated(body_tag, elements))
+            if body_tag.hasAttribute('type') \
+              and body_tag['type'] == 'terminate':
+                nte = HTTPBNetworkTerminated(body_tag, elements)
+                error = failure.Failure(nte)
                 if self.deferred.called:
                     return defer.fail(error)
                 else:
                     self.deferred.errback(error)
                 return
             if self.deferred.called:
-                return defer.succeed((body_tag,elements))
+                return defer.succeed((body_tag, elements))
             else:
-                self.deferred.callback((body_tag,elements))
-
+                self.deferred.callback((body_tag, elements))
 
     def sendConnected(self, q):
         self.q = q
-
-
 
     def clientConnectionLost(self, _, reason):
         try:
@@ -205,25 +206,26 @@ class QueryFactory(protocol.ClientFactory):
             self.deferred.errback(ValueError(status, message))
 
 
-
-
 class Keys:
-    """Generate keys according to XEP-0124 #15 "Protecting Insecure Sessions"."""
+    """
+    Generate keys according to
+    XEP-0124 #15 "Protecting Insecure Sessions".
+    """
     def __init__(self):
         self.k = []
 
     def _set_keys(self):
         seed = os.urandom(1024)
-        num_keys = random.randint(55,255)
+        num_keys = random.randint(55, 255)
         self.k = [hashlib.sha1(seed).hexdigest()]
         for i in xrange(num_keys-1):
             self.k.append(hashlib.sha1(self.k[-1]).hexdigest())
 
     def getKey(self):
         """
-        Return (key, newkey), where key is the next key to use and newkey is the next
-        newkey value to use.  If key or newkey are None, the next request doesn't require
-        that value.
+        Return (key, newkey), where key is the next key to use and newkey
+        is the next newkey value to use.  If key or newkey are None, the next
+        request doesn't require that value.
         """
         if not self.k:
             # This is the first call, so generate keys and only return new_key.
@@ -270,22 +272,23 @@ class Proxy:
 
         if self.secure:
             from twisted.internet import ssl
-            self.rid = reactor.connectSSL(self.host, self.port or 443,
-                                          self.factory, ssl.ClientContextFactory())
+            self.rid = reactor.connectSSL(self.host,
+                                          self.port or 443,
+                                          self.factory,
+                                          ssl.ClientContextFactory())
         else:
-            self.rid = reactor.connectTCP(self.host, self.port or 80, self.factory)
-
-
+            self.rid = reactor.connectTCP(self.host,
+                                          self.port or 80, self.factory)
         return self.factory.deferred
 
-
-    def send(self,b):
+    def send(self, b):
         """ Send data to the web server. """
 
         # if keepalive is off we need a new query factory
         # TODO - put a check to reuse the factory, right now we open a new one.
         d = self.connect(b)
         return d
+
 
 class HTTPBClientConnector:
     """
@@ -299,7 +302,6 @@ class HTTPBClientConnector:
         self.xs = factory.buildProtocol(self.proxy.host)
         self.xs.proxy = self.proxy
         self.xs.connectionMade()
-
 
     def disconnect(self):
         self.xs.connectionLost('disconnect')
@@ -327,10 +329,8 @@ class HTTPBindingStream(xmlstream.XmlStream):
         self.requests = []
 
     def _cbConnect(self, result):
-        r,e = result
-        ms = ''
+        r, e = result
         self.initialized = True
-        # log.msg('======================================== cbConnect ====================')
         self.session_id = r['sid']
         self.authid = r['authid']
         self.namespace = self.authenticator.namespace
@@ -340,8 +340,7 @@ class HTTPBindingStream(xmlstream.XmlStream):
         self.addOnetimeObserver("/error[@xmlns='%s']" % xmlstream.NS_STREAMS,
                                 self.onStreamError)
 
-        if len(e)>0 and e[0].name == 'features':
-            # log.msg('============================= on features ==============================')
+        if len(e) > 0 and e[0].name == 'features':
             self.onFeatures(e[0])
         else:
             self.authenticator.streamStarted()
@@ -349,24 +348,23 @@ class HTTPBindingStream(xmlstream.XmlStream):
     def _ebError(self, e):
         log.err(e.printTraceback())
 
-
     def _initializeStream(self):
-        """ Initialize binding session.
+        """
+        Initialize binding session.
 
-        Just need to create a session once, this can be done elsewhere, but here will do for now.
+        Just need to create a session once, this can be done elsewhere,
+        but here will do for now.
         """
 
         if not self.initialized:
-            b = domish.Element((NS_HTTP_BIND,'body'))
+            b = domish.Element((NS_HTTP_BIND, 'body'))
 
-            b['content']  = 'text/xml; charset=utf-8'
-            b['hold']     = '1'
-            b['rid']      = str(self.rid)
-            b['to']       = self.authenticator.jid.host
-            b['wait']     = '60'
+            b['content'] = 'text/xml; charset=utf-8'
+            b['hold'] = '1'
+            b['rid'] = str(self.rid)
+            b['to'] = self.authenticator.jid.host
+            b['wait'] = '60'
             b['xml:lang'] = 'en'
-            # FIXME - there is an issue with the keys
-            # b = self.key(b)
 
             # Connection test
             d = self.proxy.connect(b)
@@ -376,8 +374,7 @@ class HTTPBindingStream(xmlstream.XmlStream):
         else:
             self.authenticator.initializeStream()
 
-
-    def key(self,b):
+    def key(self, b):
         key, newkey = self.keys.getKey()
 
         if key:
@@ -398,19 +395,18 @@ class HTTPBindingStream(xmlstream.XmlStream):
             else:
                 self.onElement(e)
         # if no elements lets send out another poll
-        if len(self.requests)==0:
+        if len(self.requests) == 0:
             self.send()
 
-
-    def send(self, obj = None):
+    def send(self, obj=None):
         if self.session_id == 0:
             return defer.succeed(False)
 
-        b = domish.Element((NS_HTTP_BIND,"body"))
-        b['content']  = 'text/xml; charset=utf-8'
+        b = domish.Element((NS_HTTP_BIND, "body"))
+        b['content'] = 'text/xml; charset=utf-8'
         self.rid = self.rid + 1
-        b['rid']      = str(self.rid)
-        b['sid']      = str(self.session_id)
+        b['rid'] = str(self.rid)
+        b['sid'] = str(self.session_id)
         b['xml:lang'] = 'en'
 
         if obj is not None:
@@ -418,7 +414,6 @@ class HTTPBindingStream(xmlstream.XmlStream):
                 if self.rawDataOutFn:
                     self.rawDataOutFn(str(obj.toXml()))
                 b.addChild(obj)
-        #b = self.key(b)
         self.requests.append(b)
         d = self.proxy.send(b)
         d.addCallback(self._cbSend)
@@ -434,6 +429,6 @@ class HTTPBindingStreamFactory(xmlstream.XmlStreamFactory):
         self.resetDelay()
         xs = HTTPBindingStream(self.authenticator)
         xs.factory = self
-        for event, fn in self.bootstraps: xs.addObserver(event, fn)
+        for event, fn in self.bootstraps:
+            xs.addObserver(event, fn)
         return xs
-

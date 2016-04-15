@@ -7,14 +7,6 @@ from twisted.application import service
 from twisted.python import log
 
 
-def uriCheck(elem, uri):
-    """
-    This is a hack for older versions of twisted words, we need to get rid of it.
-    """
-    if str(elem.toXml()).find('xmlns') == -1:
-        elem['xmlns'] = uri
-
-
 class PunjabService(service.MultiService):
     """Punjab parent service"""
 
@@ -31,11 +23,13 @@ class PunjabService(service.MultiService):
         d.addCallback(cb).addErrback(log.err)
         return d
 
+
 class Service(service.Service):
     """
     Punjab generice service
     """
-    def error(self, failure, body = None):
+
+    def error(self, failure, body=None):
         """
         A Punjab error has occurred
         """
@@ -46,7 +40,7 @@ class Service(service.Service):
             log.msg(body)
         failure.raiseException()
 
-    def success(self, result, body = None):
+    def success(self, result, body=None):
         """
         If success we log it and return result
         """
@@ -54,12 +48,11 @@ class Service(service.Service):
         return result
 
 
-
 def makeService(config):
     """
     Create a punjab service to run
     """
-    from twisted.web import  server, resource, static
+    from twisted.web import server, resource, static
     from twisted.application import internet
 
     import httpb
@@ -86,20 +79,20 @@ def makeService(config):
             r.putChild(config['httpb'], resource.IResource(b))
 
     if config['site_log_file']:
-        site  = server.Site(r, logPath=config['site_log_file'])
+        site = server.Site(r, logPath=config['site_log_file'])
     else:
-        site  = server.Site(r)
+        site = server.Site(r)
 
     if config['ssl']:
         from OpenSSL import SSL
         from punjab.ssl import OpenSSLContextFactoryChaining
         ssl_context = OpenSSLContextFactoryChaining(config['ssl_privkey'],
-                                                       config['ssl_cert'],
-                                                       SSL.SSLv23_METHOD,)
+                                                    config['ssl_cert'],
+                                                    SSL.SSLv23_METHOD,)
         sm = internet.SSLServer(int(config['port']),
                                 site,
                                 ssl_context,
-                                backlog = int(config['verbose']))
+                                backlog=int(config['verbose']))
         sm.setServiceParent(serviceCollection)
     else:
         sm = internet.TCPServer(int(config['port']), site)
@@ -107,6 +100,4 @@ def makeService(config):
         sm.setServiceParent(serviceCollection)
 
     serviceCollection.httpb = b
-
     return serviceCollection
-

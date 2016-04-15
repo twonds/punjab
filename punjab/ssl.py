@@ -3,7 +3,8 @@ from twisted.internet import ssl
 
 
 # Override DefaultOpenSSLContextFactory to call ctx.use_certificate_chain_file
-# instead of ctx.use_certificate_file, to allow certificate chains to be loaded.
+# instead of ctx.use_certificate_file and to allow certificate chains to be
+# loaded.
 class OpenSSLContextFactoryChaining(ssl.DefaultOpenSSLContextFactory):
     def __init__(self, *args, **kwargs):
         ssl.DefaultOpenSSLContextFactory.__init__(self, *args, **kwargs)

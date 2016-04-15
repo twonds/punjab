@@ -1,35 +1,33 @@
 # Some code from idavoll, thanks Ralph!!
 NS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas"
 
-
-
 conditions = {
-	'bad-request':				{'code': '400', 'type': 'modify'},
-	'not-authorized':			{'code': '401', 'type': 'cancel'},
-	'item-not-found':			{'code': '404', 'type': 'cancel'},
-	'not-acceptable':			{'code': '406', 'type': 'modify'},
-	'conflict':					{'code': '409', 'type': 'cancel'},
-	'internal-server-error':	{'code': '500', 'type': 'wait'},
-	'feature-not-implemented':	{'code': '501', 'type': 'cancel'},
-	'service-unavailable':		{'code': '503', 'type': 'cancel'},
+    'bad-request': {'code': '400', 'type': 'modify'},
+    'not-authorized': {'code': '401', 'type': 'cancel'},
+    'item-not-found': {'code': '404', 'type': 'cancel'},
+    'not-acceptable': {'code': '406', 'type': 'modify'},
+    'conflict':	{'code': '409', 'type': 'cancel'},
+    'internal-server-error': {'code': '500', 'type': 'wait'},
+    'feature-not-implemented': {'code': '501', 'type': 'cancel'},
+    'service-unavailable': {'code': '503', 'type': 'cancel'},
 }
 
-def error_from_iq(iq, condition, text = '', type = None):
-	iq.swapAttributeValues("to", "from")
-	iq["type"] = 'error'
-	e = iq.addElement("error")
 
-	c = e.addElement((NS_XMPP_STANZAS, condition), NS_XMPP_STANZAS)
+def error_from_iq(iq, condition, text='', type=None):
+    iq.swapAttributeValues("to", "from")
+    iq["type"] = 'error'
 
-	if type == None:
-		type = conditions[condition]['type']
+    e = iq.addElement("error")
+    e.addElement((NS_XMPP_STANZAS, condition), NS_XMPP_STANZAS)
 
-	code = conditions[condition]['code']
+    if type is None:
+        type = conditions[condition]['type']
 
-	e["code"] = code
-	e["type"] = type
+    code = conditions[condition]['code']
 
-	if text:
-		t = e.addElement((NS_XMPP_STANZAS, "text"), NS_XMPP_STANZAS, text)
+    e["code"] = code
+    e["type"] = type
 
-	return iq
+    if text:
+        e.addElement((NS_XMPP_STANZAS, "text"), NS_XMPP_STANZAS, text)
+    return iq
