@@ -9,15 +9,12 @@ See INSTALL.txt for setup and installation instructions.
 
 CONTRIBUTORS
 
-Jack Moffitt xmpp:jackm@jabber.org
+https://github.com/twonds/punjab/graphs/contributors
 
-Garret Heaton <powdahound@gmail.com>
-
-Zewt (https://github.com/zewt)
 
 COPYRIGHT AND WARRANTY
 
-Copyright (C) 2001-2013 Christopher Zorn , tofu@thetofu.com
+Copyright (C) 2001-2016 Christopher Zorn , tofu@thetofu.com
 
 The code in this distribution is made available under the MIT License.
 
