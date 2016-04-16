@@ -80,6 +80,7 @@ class DeliveryFailureTestCase(XEP0206TestCase):
     """
 
     def setUp(self):
+        XEP0206TestCase.setUp(self)
         self.xmlstream = DummyXmlStream()
         self.session = session.Session(
             DummyPint(),
@@ -93,6 +94,7 @@ class DeliveryFailureTestCase(XEP0206TestCase):
 
     def tearDown(self):
         del self.session
+        XEP0206TestCase.tearDown(self)
 
     def test_skips_presence(self):
         """

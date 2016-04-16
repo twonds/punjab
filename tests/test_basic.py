@@ -173,7 +173,8 @@ class TestCase(unittest.TestCase):
             sess = self.b.service.sessions.get(s)
             if sess:
                 self.b.service.endSession(sess)
-        if hasattr(self.proxy.factory,'client'):
+        if hasattr(self.proxy, 'factory') \
+          and hasattr(self.proxy.factory,'client'):
             self.proxy.factory.client.transport.stopConnecting()
         self.server_factory.protocol.delay_features = 0
 
