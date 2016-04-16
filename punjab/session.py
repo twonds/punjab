@@ -599,12 +599,32 @@ class Session(jabber.JabberClientFactory, server.Session):
         for priority, query in emptyLists:
             del observers[priority][query]
 
+    def _handle_missed_messages(self):
+        """Return the messages with an error."""
+        for elem in self.elems:
+            elemName = elem.name.lower()
+            if elemName in (u'message', u'iq'):
+                elem['type'] = 'error'
+                error = elem.addElement('error')
+                error.addElement(
+                    'recipient-unavailable'
+                    if elemName == u'message' else
+                    'service-unavailable'
+                )
+                self.xmlstream.send(elem)
+
     def disconnect(self):
         """
         Disconnect from the xmpp server.
         """
         if not getattr(self, 'xmlstream', None):
             return
+
+        if self.elems and self.xmlstream:
+            try:
+                self._handle_missed_messages()
+            except Exception:
+                log.err('Failed to notify service of delivery failure.')
 
         if self.xmlstream:
             # sh = "<presence type='unavailable' xmlns='jabber:client'/>"
