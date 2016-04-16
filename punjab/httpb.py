@@ -116,12 +116,14 @@ class HttpbElementStream(domish.ExpatElementStream):
         # Document already started
         if self.documentStarted == 1:
             if self.currElem is not None:
-                is_elem = isinstance(self.currElem.children[-1],
-                                     domish.Element)
-                if (len(self.currElem.children) == 0 or is_elem):
+                if len(self.currElem.children) == 0:
                     if self.currRawElem[-1] != ">":
                         self.currRawElem += ">"
-
+                else:
+                    is_elem = isinstance(self.currElem.children[-1],
+                                         domish.Element)
+                    if is_elem and self.currRawElem[-1] != ">":
+                        self.currRawElem += ">"
                 self.currElem.children.append(e)
                 e.parent = self.currElem
 

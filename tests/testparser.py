@@ -41,12 +41,8 @@ class ParseTestCase(unittest.TestCase):
             for e in elems:
                 if type(u'') == type(e):
                     x = e
-                
         ntd = time.time() - t
-        
         self.failUnless(td>ntd, 'Not faster')
-        
-
 
     def testGtBug(self):
         XML = """ <body rid='1445008480' xmlns='http://jabber.org/protocol/httpbind' sid='1f2f8585f41e2dacf1f1f0ad83f8833d'><presence type='unavailable' from='KurodaJr@chesspark.com/cpc' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/><iq id='10059:enablepush' to='search.chesspark.com' type='set'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq><iq id='10060:enablepush' to='search.chesspark.com' type='set'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq></body>
@@ -57,7 +53,7 @@ class ParseTestCase(unittest.TestCase):
 
         # need tests here
         self.failUnless(e[0]==u"<presence from='KurodaJr@chesspark.com/cpc' type='unavailable' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/>",'invalid xml')
-        self.failUnless(e[1]==u"<iq to='search.chesspark.com' type='set' id='10059:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", 'invalid xml')
+        self.failUnless(e[1]==u"<iq to='search.chesspark.com' type='set' id='10059:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", e[1])
         self.failUnless(e[2]==u"<iq to='search.chesspark.com' type='set' id='10060:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", 'invalid xml')
 
 
@@ -72,7 +68,6 @@ class ParseTestCase(unittest.TestCase):
         # need tests here
         self.failUnless(e[0]==u"<iq type='get' id='980:getprefs'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq>", 'invalid xml')
         self.failUnless(e[1]==u"<iq type='get' id='981:getallignorelists'><query xmlns='jabber:iq:privacy'/></iq>", 'invalid xml')
-        
 
     def testParseEscapedAttribute(self):
         XML = """<body rid='4019888743' xmlns='http://jabber.org/protocol/httpbind' sid='948972a64d524f862107cdbd748d1d16'><presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/></body>"""
@@ -87,20 +82,16 @@ class ParseTestCase(unittest.TestCase):
 
     def testPrefixes(self):
         XML = """<body rid='384852951' xmlns='http://jabber.org/protocol/httpbind' sid='e46501b24abd334c062598498a8e02ba'><auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/></body>"""
-
         hp = HttpbParse()
-
         b, e = hp.parse(XML)
-
         self.failUnless(e[0]==u"<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>", 'invalid xml')
 
     def testPrefixesLang(self):
         XML = """<body rid='384852951' xmlns='http://jabber.org/protocol/httpbind' sid='e46501b24abd334c062598498a8e02ba'><message xml:lang='fr' to='test@test.com'><body>test</body></message></body>"""
 
         hp = HttpbParse()
-
         b, e = hp.parse(XML)
-        self.failUnless(e[0]==u"<message to='test@test.com' xml:lang='fr'><body>test</body></message>", 'invalid xml')
+        self.failUnless(e[0]==u"<message to='test@test.com' xml:lang='fr'><body>test</body></message>", e)
 
 
 
