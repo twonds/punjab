@@ -12,6 +12,7 @@ class Options(usage.Options):
     optParameters = [
         ('host', None, 'localhost', "The hostname sent in the HTTP header of BOSH requests"),
         ('port', None, 5280, "HTTP Port for BOSH connections"),
+        ('strports', None, [], "String description for a listening Endpoint"),
         ('httpb', 'b', "http-bind", "URL path for BOSH resource."),
         ('polling', None, '15', "Seconds allowed between client polling requests"),
         ('html_dir', None, "./html", "The path were static html files are served."),
@@ -35,6 +36,15 @@ class Options(usage.Options):
     optFlags = [
         ('verbose', 'v', 'Show traffic and verbose logging.'),
     ]
+
+    def __init__(self):
+        usage.Options.__init__(self)
+        self['strports'] = []
+
+    def opt_strports(self, strport):
+        """Add a strport definition to the list."""
+        self['strports'].append(strport)
+
 
 class ServiceFactory(object):
     implements(IServiceMaker, IPlugin)
