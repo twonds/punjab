@@ -4,6 +4,7 @@ Punjab - multiple http interfaces to jabber.
 """
 
 from twisted.application import service
+from twisted.application import strports
 from twisted.python import log
 
 
@@ -83,7 +84,14 @@ def makeService(config):
     else:
         site = server.Site(r)
 
-    if config['ssl']:
+    if config['strports']:
+        for strport in config['strports']:
+            sm = strports.service(
+                strport,
+                site,
+            )
+            sm.setServiceParent(serviceCollection)
+    elif config['ssl']:
         from OpenSSL import SSL
         from punjab.ssl import OpenSSLContextFactoryChaining
         ssl_context = OpenSSLContextFactoryChaining(config['ssl_privkey'],
