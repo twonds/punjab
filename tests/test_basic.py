@@ -159,7 +159,8 @@ class TestCase(unittest.TestCase):
         def cbStopListening(result=None):
             self.root = None
             self.site = None
-            self.proxy.factory.stopFactory()
+            if hasattr(self.proxy, 'factory'):
+                self.proxy.factory.stopFactory()
             self.server_factory.stopFactory()
             self.server = None
             self._cleanPending()
