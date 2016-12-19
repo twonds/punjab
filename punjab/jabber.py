@@ -5,6 +5,7 @@ from twisted.python import log
 from copy import deepcopy
 
 from twisted.words.xish import domish
+from twisted.words.xish.domish import ExpatElementStream
 from twisted.words.protocols.jabber import xmlstream
 from punjab.xmpp.ns import XMPP_PREFIXES
 
@@ -66,6 +67,58 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
         log.msg("SEND: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace'))
 
 
+class ShallowExpatElementStream(ExpatElementStream):
+    """Modification of ExpatElementStream that doesn't build xml tree for stanza payload.
+
+    Make stream parser handle only top level stanza tags. In this way payload (all xml elements with depth > 1)
+    will not be parsed into xml tree. This optimization would particularly be useful for <iq> stanzas,
+    as they may contain large payload (e.g. roster)
+
+    """
+    STANZA_TYPES = [u'message', u'presence', u'iq']
+
+    def __init__(self, *args, **kwargs):
+        ExpatElementStream.__init__(self, *args, **kwargs)
+        self._depth = 0
+        self._cur_stanza = None
+
+    def _parse_tag_name(self, name):
+        qname = name.split(' ')
+        # Namespace is not present
+        if len(qname) == 1:
+            tag_name = qname[0]
+        # Take only tag name
+        elif len(qname) == 2:
+            tag_name = qname[1]
+        else:
+            tag_name = None
+
+        return tag_name
+
+    def _onStartElement(self, name, attrs):
+        self._depth += 1
+        if self._cur_stanza is None:
+            tag_name = self._parse_tag_name(name)
+            if tag_name in self.STANZA_TYPES:
+                self._cur_stanza = (tag_name, self._depth)
+            ExpatElementStream._onStartElement(self, name, attrs)
+        else:
+            return
+
+    def _onEndElement(self, name):
+        if self._cur_stanza is not None:
+            if self._depth == self._cur_stanza[1]:
+                self._depth -= 1
+                self._cur_stanza = None
+                ExpatElementStream._onEndElement(self, name)
+            else:
+                self._depth -= 1
+                return
+        else:
+            self._depth -= 1
+            ExpatElementStream._onEndElement(self, name)
+
+
 class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
     namespace = "jabber:client"
     version = '1.0'
@@ -103,9 +156,9 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
             init.required = required
             xs.initializers.append(init)
 
-    def _reset(self):
+    def _reset(self, shallow=False):
         # need this to be in xmlstream
-        stream = domish.elementStream()
+        stream = ShallowExpatElementStream() if shallow else domish.elementStream()
         stream.DocumentStartEvent = self.xmlstream.onDocumentStart
         stream.ElementEvent = self.xmlstream.onElement
         stream.DocumentEndEvent = self.xmlstream.onDocumentEnd

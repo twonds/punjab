@@ -706,7 +706,8 @@ class Session(jabber.JabberClientFactory, server.Session):
         if len(self.waiting_requests) > 0:
             self._wrPop([s])
 
-        self.authenticator._reset()
+        # Use shallow parser if use_raw is set. No need to build whole xml tree for stanza payload.
+        self.authenticator._reset(shallow=self.use_raw)
         if self.use_raw:
             self.raw_buffer = u""
 
