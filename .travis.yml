@@ -22,7 +22,7 @@ env:
 install:
   - pip install flake8
   - pip install service_identity
-  - pip install $TWISTED --use-mirrors
+  - pip install $TWISTED
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
   - python setup.py install
 
