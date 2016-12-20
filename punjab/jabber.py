@@ -68,11 +68,12 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
 
 
 class ShallowExpatElementStream(ExpatElementStream):
-    """Modification of ExpatElementStream that doesn't build xml tree for stanza payload.
+    """Modification of parser that doesn't build xml tree for stanza payload.
 
-    Make stream parser handle only top level stanza tags. In this way payload (all xml elements with depth > 1)
-    will not be parsed into xml tree. This optimization would particularly be useful for <iq> stanzas,
-    as they may contain large payload (e.g. roster)
+    Make stream parser handle only top level stanza tags. In this way payload
+    (all xml elements with depth > 1) will not be parsed into xml tree. This
+    optimization would particularly be useful for <iq> stanzas, as they may
+    contain large payload (e.g. roster)
 
     """
     STANZA_TYPES = [u'message', u'presence', u'iq']
@@ -158,7 +159,10 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
 
     def _reset(self, shallow=False):
         # need this to be in xmlstream
-        stream = ShallowExpatElementStream() if shallow else domish.elementStream()
+        if shallow:
+            stream = ShallowExpatElementStream()
+        else:
+            stream = domish.elementStream()
         stream.DocumentStartEvent = self.xmlstream.onDocumentStart
         stream.ElementEvent = self.xmlstream.onElement
         stream.DocumentEndEvent = self.xmlstream.onDocumentEnd
