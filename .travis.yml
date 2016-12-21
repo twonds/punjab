@@ -4,14 +4,14 @@ python:
     - 2.7
 
 env:
-  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=PyOpenSSL
+  - TWISTED=git+https://github.com/twisted/twisted.git@trunk PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.1.1 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.1.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.0.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.5.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.4.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.3.0 PYOPENSSL=PyOpenSSL
-  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=
+  - TWISTED=git+https://github.com/twisted/twisted.git@trunk PYOPENSSL=
   - TWISTED=Twisted==16.1.1 PYOPENSSL=
   - TWISTED=Twisted==16.1.0 PYOPENSSL=
   - TWISTED=Twisted==16.0.0 PYOPENSSL=
