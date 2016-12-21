@@ -28,4 +28,4 @@ install:
 
 script:
   - flake8 punjab
-  - cd tests;trial xep124;trial testparser;trial xep206
+  - cd tests;export PYTHONPATH=${pwd};trial xep124;trial testparser;trial xep206
