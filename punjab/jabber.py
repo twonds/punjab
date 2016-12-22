@@ -4,8 +4,7 @@ from twisted.words.protocols.jabber import client, jid
 from twisted.python import log
 from copy import deepcopy
 
-from twisted.words.xish import domish
-from twisted.words.xish.domish import ExpatElementStream
+from twisted.words.xish.domish import ExpatElementStream, SuxElementStream
 from twisted.words.protocols.jabber import xmlstream
 from punjab.xmpp.ns import XMPP_PREFIXES
 
@@ -120,6 +119,26 @@ class ShallowExpatElementStream(ExpatElementStream):
             ExpatElementStream._onEndElement(self, name)
 
 
+def elementStream(shallow=False):
+    """ Preferred method to construct an ElementStream
+
+    Uses regular or 'shallow' Expat-based stream if available,
+    and falls back to Sux if necessary.
+
+    """
+    try:
+        if shallow:
+            es = ShallowExpatElementStream()
+        else:
+            es = ExpatElementStream()
+        return es
+    except ImportError:
+        if SuxElementStream is None:
+            raise Exception("No parsers available :(")
+        es = SuxElementStream()
+        return es
+
+
 class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
     namespace = "jabber:client"
     version = '1.0'
@@ -159,10 +178,7 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
 
     def _reset(self, shallow=False):
         # need this to be in xmlstream
-        if shallow:
-            stream = ShallowExpatElementStream()
-        else:
-            stream = domish.elementStream()
+        stream = elementStream(shallow)
         stream.DocumentStartEvent = self.xmlstream.onDocumentStart
         stream.ElementEvent = self.xmlstream.onElement
         stream.DocumentEndEvent = self.xmlstream.onDocumentEnd
