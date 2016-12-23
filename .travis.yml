@@ -4,14 +4,14 @@ python:
     - 2.7
 
 env:
-  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=PyOpenSSL
+  - TWISTED=git+https://github.com/twisted/twisted.git@trunk PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.1.1 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.1.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==16.0.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.5.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.4.0 PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==15.3.0 PYOPENSSL=PyOpenSSL
-  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=
+  - TWISTED=git+https://github.com/twisted/twisted.git@trunk PYOPENSSL=
   - TWISTED=Twisted==16.1.1 PYOPENSSL=
   - TWISTED=Twisted==16.1.0 PYOPENSSL=
   - TWISTED=Twisted==16.0.0 PYOPENSSL=
@@ -22,10 +22,10 @@ env:
 install:
   - pip install flake8
   - pip install service_identity
-  - pip install $TWISTED --use-mirrors
+  - pip install $TWISTED
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
   - python setup.py install
 
 script:
   - flake8 punjab
-  - cd tests;trial xep124;trial testparser;trial xep206
+  - cd tests;export PYTHONPATH=${pwd};trial xep124;trial testparser;trial xep206
