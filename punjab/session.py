@@ -20,7 +20,7 @@ from punjab import jabber
 from punjab.xmpp import ns
 
 import time
-import error
+from . import error
 
 try:
     from twisted.internet import ssl
@@ -40,12 +40,12 @@ class XMPPClientConnector(SRVConnector):
     """
     def __init__(self, client_reactor, domain, factory):
         """ Init """
-        if isinstance(domain, unicode):
+        if isinstance(domain, str):
             warnings.warn(
                 "Domain argument to XMPPClientConnector should be bytes, "
                 "not unicode",
                 stacklevel=2)
-            domain = domain.encode('ascii')
+            domain = domain.encode('utf-8')
         SRVConnector.__init__(self, client_reactor,
                               'xmpp-client', domain, factory)
         self.timeout = [1, 3]
@@ -86,7 +86,7 @@ def make_session(pint, attrs, session_type='BOSH'):
         reactor.connectTCP(s.hostname, s.port,
                            s, bindAddress=pint.bindAddress)
     else:
-        connector = XMPPClientConnector(reactor, s.hostname, s)
+        connector = XMPPClientConnector(reactor, s.hostname.encode("utf-8"), s)
         connector.connect()
     # timeout
     reactor.callLater(s.inactivity, s.checkExpired)
@@ -137,7 +137,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             else:
                 self.port = 5222
 
-        self.sid = "".join("%02x" % ord(i) for i in os.urandom(20))
+        self.sid = "".join("%02x" % i for i in os.urandom(20))
 
         jabber.JabberClientFactory.__init__(self, self.to, pint.v)
         server.Session.__init__(self, pint, self.sid)
@@ -152,7 +152,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         self.waiting_requests = []
         self.use_raw = attrs.get('raw', False)
 
-        self.raw_buffer = u""
+        self.raw_buffer = ""
         self.xmpp_node = ''
         self.success = 0
         self.mechanisms = []
@@ -226,19 +226,19 @@ class Session(jabber.JabberClientFactory, server.Session):
         """ Log incoming data on the xmlstream """
         if self.pint and self.pint.v:
             try:
-                log.msg("SID: %s => RECV: %r" % (self.sid, buf,))
+                log.msg("SID: %s => RECV: %r" % (self.sid, buf.decode('utf-8'),))
             except:
                 log.err()
         if self.use_raw and self.authid:
-            if isinstance(buf, basestring):
-                buf = unicode(buf, 'utf-8')
+            if isinstance(buf, str):
+                buf = buf.encode('utf-8')
             # add some raw data
             self.raw_buffer = self.raw_buffer + buf
 
     def rawDataOut(self, buf):
         """ Log outgoing data on the xmlstream """
         try:
-            log.msg("SID: %s => SEND: %r" % (self.sid, buf,))
+            log.msg("SID: %s => SEND: %r" % (self.sid, buf.decode('utf-8'),))
         except:
             log.err()
 
@@ -439,7 +439,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             # reset elems
             self.elems = []
             # reset raw buffer, features should not be in it
-            self.raw_buffer = u""
+            self.raw_buffer = ""
 
     def bindHandler(self, stz):
         """bind debugger for punjab, this is temporary! """
@@ -456,7 +456,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         stz.prefixes = ns.XMPP_PREFIXES
         if self.use_raw and self.authid:
             stz = domish.SerializedXML(self.raw_buffer)
-            self.raw_buffer = u""
+            self.raw_buffer = ""
 
         self.elems.append(stz)
         if self.waiting_requests and len(self.waiting_requests) > 0:
@@ -591,8 +591,8 @@ class Session(jabber.JabberClientFactory, server.Session):
         else:
             observers = self.xmlstream._xpathObservers
         emptyLists = []
-        for priority, priorityObservers in observers.iteritems():
-            for query, callbacklist in priorityObservers.iteritems():
+        for priority, priorityObservers in observers.items():
+            for query, callbacklist in priorityObservers.items():
                 callbacklist.callbacks = []
                 emptyLists.append((priority, query))
 
@@ -603,12 +603,12 @@ class Session(jabber.JabberClientFactory, server.Session):
         """Return the messages with an error."""
         for elem in self.elems:
             elemName = elem.name.lower()
-            if elemName in (u'message', u'iq'):
+            if elemName in ('message', 'iq'):
                 elem['type'] = 'error'
                 error = elem.addElement('error')
                 error.addElement(
                     'recipient-unavailable'
-                    if elemName == u'message' else
+                    if elemName == 'message' else
                     'service-unavailable'
                 )
                 self.xmlstream.send(elem)
@@ -672,11 +672,11 @@ class Session(jabber.JabberClientFactory, server.Session):
             reactor.callLater(wait, self.checkExpired)
 
     def _cacheData(self, rid, data):
-        if len(self.cache_data.keys()) >= 3:
+        cache_keys = list(self.cache_data.keys())
+        if len(cache_keys) >= 3:
             # remove the first one in
-            keys = self.cache_data.keys()
-            keys.sort()
-            del self.cache_data[keys[0]]
+            cache_keys.sort()
+            del self.cache_data[cache_keys[0]]
 
         self.cache_data[int(rid)] = data
 
@@ -710,7 +710,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         # No need to build whole xml tree for stanza payload.
         self.authenticator._reset(shallow=self.use_raw)
         if self.use_raw:
-            self.raw_buffer = u""
+            self.raw_buffer = ""
 
     def _saslError(self, sasl_error, d=None):
         """ SASL error """

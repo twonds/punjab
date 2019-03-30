@@ -56,14 +56,14 @@ def makeService(config):
     from twisted.web import server, resource, static
     from twisted.application import internet
 
-    import httpb
+    from . import httpb
 
     serviceCollection = PunjabService()
 
     if config['html_dir']:
         r = static.File(config['html_dir'])
     else:
-        print "The html directory is needed."
+        print("The html directory is needed.")
         return
 
     if config['white_list']:
@@ -75,9 +75,9 @@ def makeService(config):
     if config['httpb']:
         b = httpb.HttpbService(config['verbose'], config['polling'])
         if config['httpb'] == '':
-            r.putChild('http-bind', resource.IResource(b))
+            r.putChild(b'http-bind', resource.IResource(b))
         else:
-            r.putChild(config['httpb'], resource.IResource(b))
+            r.putChild(config['httpb'].encode('utf-8'), resource.IResource(b))
 
     if config['site_log_file']:
         site = server.Site(r, logPath=config['site_log_file'])

@@ -1,6 +1,6 @@
 import hashlib
 import random
-import urlparse
+import urllib.parse
 import os
 
 from twisted.internet import defer, reactor, protocol
@@ -84,24 +84,24 @@ class QueryProtocol(http.HTTPClient):
         self.sendBody(self.factory.cb)
 
     def sendCommand(self, command, path):
-        self.transport.write('%s %s HTTP/1.1\r\n' % (command, path))
+        self.transport.write(('%s %s HTTP/1.1\r\n' % (command, path)).encode('utf-8'))
 
     def sendBody(self, b, close=0):
         if isinstance(b, domish.Element):
             bdata = b.toXml().encode('utf-8')
         else:
-            bdata = b
+            bdata = b.encode('utf-8')
 
         self.sendCommand('POST', self.factory.url)
-        self.sendHeader('User-Agent', 'Twisted/XEP-0124')
-        self.sendHeader('Host', self.factory.host)
-        self.sendHeader('Content-type', 'text/xml')
-        self.sendHeader('Content-length', str(len(bdata)))
+        self.sendHeader(b'User-Agent', 'Twisted/XEP-0124')
+        self.sendHeader(b'Host', self.factory.host)
+        self.sendHeader(b'Content-type', 'text/xml')
+        self.sendHeader(b'Content-length', str(len(bdata)))
         self.endHeaders()
         self.transport.write(bdata)
 
     def handleStatus(self, version, status, message):
-        if status != '200':
+        if status != b'200':
             self.factory.badStatus(status, message)
 
     def handleResponse(self, contents):
@@ -121,7 +121,7 @@ class QueryProtocol(http.HTTPClient):
             self.handleStatus(version, status, message)
             return
         if line:
-            key, val = line.split(':', 1)
+            key, val = line.decode('utf-8').split(':', 1)
             val = val.lstrip()
             self.handleHeader(key, val)
             if key.lower() == 'content-length':
@@ -134,7 +134,7 @@ class QueryProtocol(http.HTTPClient):
     def handleResponseEnd(self):
         self.firstLine = 1
         if self.__buffer is not None:
-            b = ''.join(self.__buffer)
+            b = b''.join(self.__buffer)
 
             self.__buffer = None
             self.handleResponse(b)
@@ -218,8 +218,8 @@ class Keys:
         seed = os.urandom(1024)
         num_keys = random.randint(55, 255)
         self.k = [hashlib.sha1(seed).hexdigest()]
-        for i in xrange(num_keys-1):
-            self.k.append(hashlib.sha1(self.k[-1]).hexdigest())
+        for i in range(num_keys-1):
+            self.k.append(hashlib.sha1(self.k[-1].encode('utf-8')).hexdigest())
 
     def getKey(self):
         """
@@ -253,8 +253,8 @@ class Proxy:
         """
         Parse the given url and find the host and port to connect to.
         """
-        parts = urlparse.urlparse(url)
-        self.url = urlparse.urlunparse(('', '')+parts[2:])
+        parts = urllib.parse.urlparse(url)
+        self.url = urllib.parse.urlunparse(('', '')+parts[2:])
         if self.url == "":
             self.url = "/"
         if ':' in parts[1]:
@@ -389,7 +389,7 @@ class HTTPBindingStream(xmlstream.XmlStream):
         self.requests.pop(0)
         for e in elements:
             if self.rawDataInFn:
-                self.rawDataInFn(str(e.toXml()))
+                self.rawDataInFn(e.toXml())
             if e.name == 'features':
                 self.onFeatures(e)
             else:
