@@ -79,6 +79,9 @@ def makeService(config):
         else:
             r.putChild(config['httpb'].encode('utf-8'), resource.IResource(b))
 
+    if config['route']:
+        httpb.HttpbService.route = 'xmpp:'+config['route']
+
     if config['site_log_file']:
         site = server.Site(r, logPath=config['site_log_file'])
     else:

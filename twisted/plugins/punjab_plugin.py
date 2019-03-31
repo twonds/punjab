@@ -16,6 +16,7 @@ class Options(usage.Options):
         ('httpb', 'b', "http-bind", "URL path for BOSH resource."),
         ('polling', None, '15', "Seconds allowed between client polling requests"),
         ('html_dir', None, "./html", "The path were static html files are served."),
+        ('route', None, None, "A fixed route for all BOSH sessions e.g.: xmpp.myserver.com:5222"),
         ('ssl', None, None, "A flag to turn on ssl for BOSH requests"),
         ('ssl_privkey', None, "ssl.key", "SSL private key location"),
         ('ssl_cert', None, "ssl.crt", "SSL certificate location"),

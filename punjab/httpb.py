@@ -577,6 +577,8 @@ class HttpbService(punjab.Service):
     white_list = []
     black_list = []
 
+    route = None
+
     def __init__(self,
                  verbose=0, polling=15,
                  use_raw=False, bindAddress=None,
@@ -676,6 +678,8 @@ class HttpbService(punjab.Service):
             body['lang'] = lang
         if not body.hasAttribute('inactivity'):
             body['inactivity'] = 60
+        if self.route:
+            body['route'] = self.route
         return self.make_session(self, body.attributes)
 
     def stopService(self):
