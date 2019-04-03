@@ -60,10 +60,10 @@ class JabberClientFactory(xmlstream.XmlStreamFactory):
                     d.errback(reason)
 
     def rawDataIn(self, buf):
-        log.msg("RECV: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace'))
+        log.msg("RECV: %s" % buf.decode('utf-8'))
 
     def rawDataOut(self, buf):
-        log.msg("SEND: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace'))
+        log.msg("SEND: %s" % buf.decode('utf-8'))
 
 
 class ShallowExpatElementStream(ExpatElementStream):
@@ -75,7 +75,7 @@ class ShallowExpatElementStream(ExpatElementStream):
     contain large payload (e.g. roster)
 
     """
-    STANZA_TYPES = [u'message', u'presence', u'iq']
+    STANZA_TYPES = ['message', 'presence', 'iq']
 
     def __init__(self, *args, **kwargs):
         ExpatElementStream.__init__(self, *args, **kwargs)
@@ -191,8 +191,8 @@ class PunjabAuthenticator(xmlstream.ConnectAuthenticator):
                   "xmlns:stream='http://etherx.jabber.org/streams' "
                   "version='%s' to='%s'>") % (self.namespace,
                                               self.version,
-                                              self.streamHost.encode('utf-8'))
-            self.xmlstream.send(str(sh))
+                                              self.streamHost)
+            self.xmlstream.send(sh)
 
     def sendAuth(self, jid, passwd, callback, errback=None):
         self.jid = jid

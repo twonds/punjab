@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.words.xish import domish, xpath, xmlstream
 from twisted.words.protocols.jabber import jid
 
-from zope.interface import Interface, implements
+from zope.interface import Interface, implementer
 
 from punjab.xmpp import ns
 
@@ -32,10 +32,10 @@ class IXMPPAuthenticationFeature(IXMPPFeature):
     pass
 
 
+@implementer(IXMPPAuthenticationFeature)
 class IQAuthFeature(object):
     """ XEP-0078 : http://www.xmpp.org/extensions/xep-0078.html"""
 
-    implements(IXMPPAuthenticationFeature)
 
     IQ_GET_AUTH = xpath.internQuery(ns.IQ_GET_AUTH)
     IQ_SET_AUTH = xpath.internQuery(ns.IQ_SET_AUTH)
@@ -128,27 +128,27 @@ class XMPPServerProtocol(xmlstream.XmlStream):
 
     def send(self, obj):
         if not self.initialized:
-            self.transport.write("""<?xml version="1.0"?>\n""")
+            self.transport.write(b"""<?xml version="1.0"?>\n""")
             self.initialized = True
         xmlstream.XmlStream.send(self, obj)
 
     def streamConnected(self, elm):
-        print "stream connected"
+        print("stream connected")
 
     def streamStarted(self, elm):
         """stream has started, we need to respond
         """
         if self.delay_features == 0:
-            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'><stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""" % (ns.NS_CLIENT, self.host, self.id,))  # noqa
+            self.send(("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'><stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""" % (ns.NS_CLIENT, self.host, self.id,)).encode('utf-8'))  # noqa
         else:
-            self.send("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'>""" % (ns.NS_CLIENT, self.host, self.id,))  # noqa
-            reactor.callLater(self.delay_features, self.send, """<stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""")  # noqa
+            self.send(("""<stream:stream xmlns='%s' xmlns:stream='http://etherx.jabber.org/streams' from='%s' id='%s' version='1.0' xml:lang='en'>""" % (ns.NS_CLIENT, self.host, self.id,)).encode('utf-8'))  # noqa
+            reactor.callLater(self.delay_features, self.send, b"""<stream:features><register xmlns='http://jabber.org/features/iq-register'/></stream:features>""")  # noqa
 
     def streamEnded(self, elm):
-        self.send("""</stream:stream>""")
+        self.send(b"""</stream:stream>""")
 
     def streamErrored(self, elm):
-        self.send("""<stream:error/></stream:stream>""")
+        self.send(b"""<stream:error/></stream:stream>""")
 
     def authenticated(self, user):
         """User has authenticated.
@@ -158,8 +158,8 @@ class XMPPServerProtocol(xmlstream.XmlStream):
     def onElement(self, element):
         try:
             xmlstream.XmlStream.onElement(self, element)
-        except Exception, e:
-            print "Exception!", e
+        except Exception as e:
+            print("Exception!", e)
             raise e
 
     def onDocumentEnd(self):
@@ -172,22 +172,22 @@ class XMPPServerProtocol(xmlstream.XmlStream):
     def triggerChallenge(self):
         """ send a fake challenge for testing
         """
-        self.send("""<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>cmVhbG09ImNoZXNzcGFyay5jb20iLG5vbmNlPSJ0YUhIM0FHQkpQSE40eXNvNEt5cFlBPT0iLHFvcD0iYXV0aCxhdXRoLWludCIsY2hhcnNldD11dGYtOCxhbGdvcml0aG09bWQ1LXNlc3M=</challenge>""")  # noqa
+        self.send(b"""<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>cmVhbG09ImNoZXNzcGFyay5jb20iLG5vbmNlPSJ0YUhIM0FHQkpQSE40eXNvNEt5cFlBPT0iLHFvcD0iYXV0aCxhdXRoLWludCIsY2hhcnNldD11dGYtOCxhbGdvcml0aG09bWQ1LXNlc3M=</challenge>""")  # noqa
 
     def triggerInvalidXML(self):
         """Send invalid XML, to trigger a parse error."""
-        self.send("""<parse error=>""")
+        self.send(b"""<parse error=>""")
         self.streamEnded(None)
 
     def triggerStreamError(self):
         """ send a stream error
         """
-        self.send("<stream:error xmlns:stream='http://etherx.jabber.org/streams'><policy-violation xmlns='urn:ietf:params:xml:ns:xmpp-streams'/><text xmlns='urn:ietf:params:xml:ns:xmpp-streams' xml:lang='langcode'>Error text</text><arbitrary-extension val='2'/></stream:error>""")  # noqa
+        self.send(b"""<stream:error xmlns:stream='http://etherx.jabber.org/streams'><policy-violation xmlns='urn:ietf:params:xml:ns:xmpp-streams'/><text xmlns='urn:ietf:params:xml:ns:xmpp-streams' xml:lang='langcode'>Error text</text><arbitrary-extension val='2'/></stream:error>""")  # noqa
         self.streamEnded(None)
 
 
+@implementer(IXMPPServerFactory)
 class XMPPServerFactoryFromService(xmlstream.XmlStreamFactory):
-    implements(IXMPPServerFactory)
 
     protocol = XMPPServerProtocol
 
@@ -209,5 +209,6 @@ components.registerAdapter(XMPPServerFactoryFromService,
                            IXMPPServerFactory)
 
 
+@implementer(IXMPPServerService)
 class XMPPServerService(service.Service):
-    implements(IXMPPServerService)
+    pass

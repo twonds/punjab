@@ -1,4 +1,4 @@
-from zope.interface import implements
+from zope.interface import implementer
 from twisted.python import usage
 from twisted.plugin import IPlugin
 from twisted.application.service import IServiceMaker
@@ -46,8 +46,8 @@ class Options(usage.Options):
         self['strports'].append(strport)
 
 
+@implementer(IServiceMaker, IPlugin)
 class ServiceFactory(object):
-    implements(IServiceMaker, IPlugin)
     tapname = "punjab"
     description = "A HTTP XMPP client interface"
     options = Options

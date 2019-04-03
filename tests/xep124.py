@@ -86,7 +86,7 @@ class XEP0124TestCase(test_basic.TestCase):
 
         def _error(e):
             # This is the error we expect.
-            if isinstance(e.value, ValueError) and e.value.args == ('400', 'Bad Request'):
+            if isinstance(e.value, ValueError) and e.value.args == (b'400', b'Bad Request'):
                 return True
 
             # Any other error, including the error raised from _testSessionCreate, should
@@ -116,7 +116,7 @@ class XEP0124TestCase(test_basic.TestCase):
         """
 
         def testTimeout(res):
-            self.failUnlessEqual(res.value[0], '404')
+            self.failUnlessEqual(res.value.args[0], b'404')
 
         def testCBTimeout(res):
             # check for terminate if we expire

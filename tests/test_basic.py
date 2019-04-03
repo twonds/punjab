@@ -38,7 +38,7 @@ class TestCase(unittest.TestCase):
         self.rid = random.randint(0,10000000)
         self.hbs = HttpbService(1)
         self.b = resource.IResource(self.hbs)
-        self.root.putChild('xmpp-bosh', self.b)
+        self.root.putChild(b'xmpp-bosh', self.b)
 
         self.site  = server.Site(self.root)
 
@@ -120,7 +120,7 @@ class TestCase(unittest.TestCase):
             else:
                 b.addRawXml(ext)
 
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             b[key] = value
         return b
 
