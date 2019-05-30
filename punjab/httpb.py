@@ -389,7 +389,7 @@ class Httpb(resource.Resource):
             self.hp._reset()
             self.send_http_error(400, request)
             return server.NOT_DONE_YET
-        except:
+        except Exception:
             log.err()
             # reset parser, just in case
             self.hp._reset()
@@ -504,7 +504,7 @@ class Httpb(resource.Resource):
                 self.send_http_error(500, request,
                                      'internal-server-error',
                                      'error', e)
-        except:
+        except Exception:
             log.err()
             pass
 
@@ -755,7 +755,7 @@ class HttpbService(punjab.Service):
 
             return s, self._parse(s, body, xmpp_elements)
 
-        except:
+        except Exception:
             log.err()
             return s, defer.fail(error.InternalServerError())
 

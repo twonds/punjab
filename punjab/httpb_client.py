@@ -7,7 +7,7 @@ from twisted.internet import defer, reactor, protocol
 from twisted.python import log, failure
 try:
     from twisted.words.xish import domish, utility
-except:
+except Exception:
     from twisted.xish import domish, utility  # noqa
 from twisted.web import http
 
@@ -111,11 +111,11 @@ class QueryProtocol(http.HTTPClient):
     def lineReceived(self, line):
         if self.firstLine:
             self.firstLine = 0
-            l = line.split(None, 2)
-            version = l[0]
-            status = l[1]
+            line_split = line.split(None, 2)
+            version = line_split[0]
+            status = line_split[1]
             try:
-                message = l[2]
+                message = line_split[2]
             except IndexError:
                 # sometimes there is no message
                 message = ""
@@ -171,11 +171,11 @@ class QueryFactory(protocol.ClientFactory):
         hp = HttpbParse(True)
         try:
             body_tag, elements = hp.parse(contents)
-        except:
+        except Exception:
             raise
         else:
             if body_tag.hasAttribute('type') \
-              and body_tag['type'] == 'terminate':
+             and body_tag['type'] == 'terminate':
                 nte = HTTPBNetworkTerminated(body_tag, elements)
                 error = failure.Failure(nte)
                 if self.deferred.called:
@@ -197,7 +197,7 @@ class QueryFactory(protocol.ClientFactory):
             if not self.deferred.called:
                 self.deferred.errback(reason)
 
-        except:
+        except Exception:
             return reason
 
     clientConnectionFailed = clientConnectionLost

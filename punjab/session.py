@@ -228,7 +228,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             try:
                 log.msg("SID: %s => RECV: %r" % (self.sid,
                                                  buf.decode('utf-8'),))
-            except:
+            except Exception:
                 log.err()
         if self.use_raw and self.authid:
             if isinstance(buf, str):
@@ -240,7 +240,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         """ Log outgoing data on the xmlstream """
         try:
             log.msg("SID: %s => SEND: %r" % (self.sid, buf.decode('utf-8'),))
-        except:
+        except Exception:
             log.err()
 
     def _wrPop(self, data, i=0):
@@ -310,7 +310,7 @@ class Session(jabber.JabberClientFactory, server.Session):
 
         try:
             self.expire()
-        except:
+        except Exception:
             self.onExpire()
 
         return defer.succeed(self.elems)
@@ -397,7 +397,7 @@ class Session(jabber.JabberClientFactory, server.Session):
                 self.xmlstream.addObserver("/presence",  self.stanzaHandler)
                 # TODO - we should do something like this
                 # self.xmlstream.addObserver("/*",  self.stanzaHandler)
-        except:
+        except Exception:
             log.err(traceback.print_exc())
             self._wrError(error.Error("remote-connection-failed"))
             self.disconnect()
@@ -447,7 +447,7 @@ class Session(jabber.JabberClientFactory, server.Session):
         if self.verbose:
             try:
                 log.msg('BIND: %s %s' % (str(self.sid), str(stz.bind.jid)))
-            except:
+            except Exception:
                 log.err()
         if self.use_raw:
             self.raw_buffer = stz.toXml()
@@ -521,7 +521,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             if do_expire:
                 try:
                     self.expire()
-                except:
+                except Exception:
                     self.onExpire()
             else:
                 s = self.pint.sessions.get(self.sid)
@@ -562,7 +562,7 @@ class Session(jabber.JabberClientFactory, server.Session):
             if do_expire:
                 try:
                     self.expire()
-                except:
+                except Exception:
                     self.onExpire()
             else:
                 s = self.pint.sessions.get(self.sid)
