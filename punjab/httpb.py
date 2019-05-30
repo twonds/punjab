@@ -561,7 +561,7 @@ class Httpb(resource.Resource):
                 log.msg('HTTPB Return Error: {} -> {}'.format(
                     code, bxml.decode('utf-8')))
             request.setHeader("content-type", "text/xml")
-            request.setHeader("content-length", len(bxml))
+            request.setHeader("content-length", str(len(bxml)))
             request.write(bxml)
         else:
             request.setHeader("content-length", "0")
