@@ -1,9 +1,8 @@
+dist: xenial   # required for Python >= 3.7
 language: python
-
 python:
-    - 3.7.3
+  - "3.7"
 
-env:
 env:
   - TWISTED=git+https://github.com/twisted/twisted.git@trunk PYOPENSSL=PyOpenSSL
   - TWISTED=Twisted==19.2.0 PYOPENSSL=PyOpenSSL
