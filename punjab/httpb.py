@@ -558,7 +558,8 @@ class Httpb(resource.Resource):
 
             bxml = b.toXml(prefixes=xml_prefixes).encode(charset, 'replace')
             if self.service.v:
-                log.msg('HTTPB Return Error: ' + str(code) + ' -> ' + bxml.decode('utf-8'))
+                log.msg('HTTPB Return Error: {} -> {}'.format(
+                    code, bxml.decode('utf-8')))
             request.setHeader("content-type", "text/xml")
             request.setHeader("content-length", len(bxml))
             request.write(bxml)
@@ -572,7 +573,6 @@ components.registerAdapter(Httpb, IHttpbService, resource.IResource)
 
 @implementer(IHttpbService)
 class HttpbService(punjab.Service):
-
 
     white_list = []
     black_list = []

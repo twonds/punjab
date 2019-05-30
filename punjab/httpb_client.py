@@ -84,7 +84,8 @@ class QueryProtocol(http.HTTPClient):
         self.sendBody(self.factory.cb)
 
     def sendCommand(self, command, path):
-        self.transport.write(('%s %s HTTP/1.1\r\n' % (command, path)).encode('utf-8'))
+        self.transport.write(
+            ('%s %s HTTP/1.1\r\n' % (command, path)).encode('utf-8'))
 
     def sendBody(self, b, close=0):
         if isinstance(b, domish.Element):

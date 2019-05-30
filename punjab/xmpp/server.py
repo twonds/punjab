@@ -36,7 +36,6 @@ class IXMPPAuthenticationFeature(IXMPPFeature):
 class IQAuthFeature(object):
     """ XEP-0078 : http://www.xmpp.org/extensions/xep-0078.html"""
 
-
     IQ_GET_AUTH = xpath.internQuery(ns.IQ_GET_AUTH)
     IQ_SET_AUTH = xpath.internQuery(ns.IQ_SET_AUTH)
 

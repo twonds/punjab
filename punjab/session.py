@@ -226,7 +226,8 @@ class Session(jabber.JabberClientFactory, server.Session):
         """ Log incoming data on the xmlstream """
         if self.pint and self.pint.v:
             try:
-                log.msg("SID: %s => RECV: %r" % (self.sid, buf.decode('utf-8'),))
+                log.msg("SID: %s => RECV: %r" % (self.sid,
+                                                 buf.decode('utf-8'),))
             except:
                 log.err()
         if self.use_raw and self.authid:
