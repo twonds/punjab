@@ -53,9 +53,12 @@ class ParseTestCase(unittest.TestCase):
 
         # need tests here
 
-        self.failUnless(e[0]=="<presence type='unavailable' from='KurodaJr@chesspark.com/cpc' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/>",'invalid xml')
-        self.failUnless(e[1]=="<iq id='10059:enablepush' to='search.chesspark.com' type='set'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", e[1])
-        self.failUnless(e[2]=="<iq id='10060:enablepush' to='search.chesspark.com' type='set'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", 'invalid xml')
+        self.failUnlessEqual
+        (e[0],
+         "<presence from='KurodaJr@chesspark.com/cpc' type='unavailable' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/>",
+        'invalid xml {}'.format(e[0]))
+        self.failUnless(e[1]=="<iq to='search.chesspark.com' type='set' id='10059:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", e[1])
+        self.failUnless(e[2]=="<iq to='search.chesspark.com' type='set' id='10060:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", 'invalid xml {}'.format(e[2]))
 
 
     def testParse(self):
@@ -67,8 +70,8 @@ class ParseTestCase(unittest.TestCase):
         b, e = hp.parse(XML)
 
         # need tests here
-        self.failUnless(e[0]=="<iq id='980:getprefs' type='get'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq>", 'invalid xml')
-        self.failUnless(e[1]=="<iq id='981:getallignorelists' type='get'><query xmlns='jabber:iq:privacy'/></iq>", 'invalid xml')
+        self.failUnless(e[0]=="<iq type='get' id='980:getprefs'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq>", e[0])
+        self.failUnless(e[1]=="<iq type='get' id='981:getallignorelists'><query xmlns='jabber:iq:privacy'/></iq>", e[1])
 
     def testParseEscapedAttribute(self):
         XML = """<body rid='4019888743' xmlns='http://jabber.org/protocol/httpbind' sid='948972a64d524f862107cdbd748d1d16'><presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/></body>"""
@@ -77,7 +80,7 @@ class ParseTestCase(unittest.TestCase):
 
         b, e = hp.parse(XML)
 
-        ex = "<presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/>"
+        ex = "<presence to='room@conf.example.com/D&apos;Artagnan Longfellow' from='dude@example.com'/>"
         self.assertEquals(e[0], ex)
 
 
@@ -92,7 +95,7 @@ class ParseTestCase(unittest.TestCase):
 
         hp = HttpbParse()
         b, e = hp.parse(XML)
-        self.failUnless(e[0]=="<message xml:lang='fr' to='test@test.com'><body>test</body></message>", e)
+        self.failUnlessEqual(e[0], "<message to='test@test.com' xml:lang='fr'><body>test</body></message>", e)
 
 
 
@@ -108,8 +111,9 @@ class ParseTestCase(unittest.TestCase):
         hp = HttpbParse()
 
         b, e = hp.parse(XML)
-
-        self.failUnless(e[0]=="<message to='dev@chat.chesspark.com' from='jack@chesspark.com/cpc' type='groupchat' id='2900'><body xmlns='jabber:client'>i type &gt; and i see &gt;&gt;&gt;</body></message>", 'Invalid Xml')
+        self.failUnlessEqual(e[0],
+                             "<message to='dev@chat.chesspark.com' from='jack@chesspark.com/cpc' id='2900' type='groupchat'><body xmlns='jabber:client'>i type &gt; and i see &gt;&gt;&gt;</body></message>",
+                             'Invalid Xml')
 
 
     def testCDATA(self):
@@ -182,4 +186,54 @@ class ParseTestCase(unittest.TestCase):
 
         b, e = hp.parse(XML)
 
-        self.failUnless(e[0]=="<iq xmlns='jabber:client' id='6161:setprefs' type='set'>\n        <query xmlns='jabber:iq:private'>\n          <preferences xmlns='http://chesspark.com/xml/chesspark-01'>\n            <statuses>\n              <away>test2</away>\n              <available>test1</available>\n            </statuses>\n            <favorite-channels>\n              <channel jid='asdf@chat.chesspark.com' autojoin='no'/>\n              <channel jid='focus@chat.chesspark.com' autojoin='no'/>\n              <channel jid='help@chat.chesspark.com' autojoin='no'/>\n            </favorite-channels>\n            <time-controls/>\n            <searchfilters>\n              <filter node='play'>\n                <variant name='standard'/>\n              </filter>\n              <filter open='yes' node='watch'>\n                <computer/>\n              </filter>\n              <filter node='adjourned'>\n                <computer/>\n              </filter>\n              <filter node='myads'>\n                <computer/>\n              </filter>\n            </searchfilters>\n            <loginrooms>\n              <room>pro@chat.chesspark.com</room>\n            </loginrooms>\n            <noinitialroster/>\n            <boardsize size='61'/>\n            <volume setting='100'/>\n            <hidewelcomedialog/>\n            <showoffline/>\n            <showavatars/>\n            <showmucpresenceinchat/>\n            <hideparticipants/>\n            <newlineonshift/>\n            <nochatnotify/>\n            <no-gameboard-autoresize/>\n            <messagewhenplaying/>\n            <hidegamefinderhelp/>\n            <hidewarningondisconnect/>\n            <disablesounds/>\n            <nogamesearchonlogin/>\n          </preferences>\n        </query>\n      </iq>", 'invalid xml')
+        expected = """<iq xmlns='jabber:client' type='set' id='6161:setprefs'>
+        <query xmlns='jabber:iq:private'>
+          <preferences xmlns='http://chesspark.com/xml/chesspark-01'>
+            <statuses>
+              <away>test2</away>
+              <available>test1</available>
+            </statuses>
+            <favorite-channels>
+              <channel jid='asdf@chat.chesspark.com' autojoin='no'/>
+              <channel jid='focus@chat.chesspark.com' autojoin='no'/>
+              <channel jid='help@chat.chesspark.com' autojoin='no'/>
+            </favorite-channels>
+            <time-controls/>
+            <searchfilters>
+              <filter node='play'>
+                <variant name='standard'/>
+              </filter>
+              <filter node='watch' open='yes'>
+                <computer/>
+              </filter>
+              <filter node='adjourned'>
+                <computer/>
+              </filter>
+              <filter node='myads'>
+                <computer/>
+              </filter>
+            </searchfilters>
+            <loginrooms>
+              <room>pro@chat.chesspark.com</room>
+            </loginrooms>
+            <noinitialroster/>
+            <boardsize size='61'/>
+            <volume setting='100'/>
+            <hidewelcomedialog/>
+            <showoffline/>
+            <showavatars/>
+            <showmucpresenceinchat/>
+            <hideparticipants/>
+            <newlineonshift/>
+            <nochatnotify/>
+            <no-gameboard-autoresize/>
+            <messagewhenplaying/>
+            <hidegamefinderhelp/>
+            <hidewarningondisconnect/>
+            <disablesounds/>
+            <nogamesearchonlogin/>
+          </preferences>
+        </query>
+      </iq>"""
+
+        self.failUnlessEqual(expected, e[0])
