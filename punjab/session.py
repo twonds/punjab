@@ -83,8 +83,14 @@ def make_session(pint, attrs, session_type='BOSH'):
     if s.hostname in ['localhost', '127.0.0.1']:
         connect_srv = False
     if not connect_srv:
-        reactor.connectTCP(s.hostname, s.port,
-                           s, bindAddress=pint.bindAddress)
+        if directTLS and ssl:
+            context = ssl.ClientContextFactory()
+            context.method = ssl.SSL.SSLv23_METHOD
+            reactor.connectSSL(s.hostname, s.port,
+                               s, context, bindAddress=pint.bindAddress)
+        else:
+            reactor.connectTCP(s.hostname, s.port,
+                               s, bindAddress=pint.bindAddress)
     else:
         connector = XMPPClientConnector(reactor, s.hostname.encode("utf-8"), s)
         connector.connect()
