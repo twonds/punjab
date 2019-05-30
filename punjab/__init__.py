@@ -87,6 +87,8 @@ def makeService(config):
     else:
         site = server.Site(r)
 
+    session.directTLS = bool(config.get('directTLS'))
+
     if config['strports']:
         for strport in config['strports']:
             sm = strports.service(
