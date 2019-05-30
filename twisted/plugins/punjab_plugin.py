@@ -12,6 +12,7 @@ class Options(usage.Options):
     optParameters = [
         ('host', None, 'localhost', "The hostname sent in the HTTP header of BOSH requests"),
         ('port', None, 5280, "HTTP Port for BOSH connections"),
+        ('directTLS', None, None, "A flag to turn on direct TLS for XMPP connections"),
         ('strports', None, [], "String description for a listening Endpoint"),
         ('httpb', 'b', "http-bind", "URL path for BOSH resource."),
         ('polling', None, '15', "Seconds allowed between client polling requests"),
