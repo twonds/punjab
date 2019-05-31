@@ -14,7 +14,7 @@ https://github.com/twonds/punjab/graphs/contributors
 
 COPYRIGHT AND WARRANTY
 
-Copyright (C) 2001-2016 Christopher Zorn , tofu@thetofu.com
+Copyright (C) 2001-2019 Christopher Zorn , tofu@thetofu.com
 
 The code in this distribution is made available under the MIT License.
 

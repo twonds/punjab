@@ -24,9 +24,9 @@ Dependencies
 
 Please make sure all dependencies are met before submitting a troubleshooting question.
 
-- Python 2.6>=
+- Python 3.6>=
 
-- Twisted 11.1>=
+- Twisted 19.2.0>=
     http://twistedmatrix.com/
 
 - pyopenssl - if you want tls to work.
