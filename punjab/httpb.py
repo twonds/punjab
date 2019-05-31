@@ -484,7 +484,8 @@ class Httpb(resource.Resource):
                 ec = getattr(e.value, 'children', None)
                 if ec:
                     echildren = ec
-                condition = error.conditions[str(e.value.stanza_error)]
+                condition = error.conditions.get(str(e.value.stanza_error),
+                                                 {'code': '500'})
                 error_type = condition['type']
                 code = condition['code']
                 self.send_http_error(code,
@@ -495,7 +496,8 @@ class Httpb(resource.Resource):
 
                 return server.NOT_DONE_YET
             elif e.value:
-                self.send_http_error(error.conditions[str(e.value)]['code'],
+                condition = error.conditions.get(str(e.value), {'code': '500'})
+                self.send_http_error(condition['code'],
                                      request,
                                      str(e.value),
                                      error.conditions[str(e.value)]['type'])
@@ -514,7 +516,7 @@ class Httpb(resource.Resource):
         bxml = bxml.encode(charset, 'replace')
 
         request.setHeader('content-type', 'text/xml')
-        request.setHeader('content-length', len(bxml))
+        request.setHeader('content-length', str(len(bxml)))
         if self.service.v:
             log.msg('\n\nRETURN HTTPB %s:' % (time.time(),))
             log.msg(bxml)

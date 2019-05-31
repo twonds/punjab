@@ -7,6 +7,8 @@ from twisted.application import service
 from twisted.application import strports
 from twisted.python import log
 
+from . import session
+
 
 class PunjabService(service.MultiService):
     """Punjab parent service"""
@@ -87,7 +89,7 @@ def makeService(config):
     else:
         site = server.Site(r)
 
-    session.directTLS = bool(config.get('directTLS'))
+    session.DIRECT_TLS = bool(config.get('directTLS'))
 
     if config['strports']:
         for strport in config['strports']:

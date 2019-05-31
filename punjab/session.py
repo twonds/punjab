@@ -28,10 +28,14 @@ except ImportError:
     ssl = None
 if ssl and not ssl.supported:
     ssl = None
+
+
 if not ssl:
     log.msg("SSL ERROR: "
             "You do not have ssl support this may cause problems "
             "with tls client connections.")
+
+DIRECT_TLS = False
 
 
 class XMPPClientConnector(SRVConnector):
@@ -83,7 +87,7 @@ def make_session(pint, attrs, session_type='BOSH'):
     if s.hostname in ['localhost', '127.0.0.1']:
         connect_srv = False
     if not connect_srv:
-        if directTLS and ssl:
+        if DIRECT_TLS and ssl:
             context = ssl.ClientContextFactory()
             context.method = ssl.SSL.SSLv23_METHOD
             reactor.connectSSL(s.hostname, s.port,

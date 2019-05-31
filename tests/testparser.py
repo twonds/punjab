@@ -20,6 +20,28 @@ class ParseTestCase(unittest.TestCase):
     Tests for Punjab compatability with http://www.xmpp.org/extensions/xep-0124.html
     """
 
+    def assertXMLEqual(self, expected_str, elem_str):
+        hp = HttpbParse(use_t=True)
+        _, ex = hp.parse("<body>{}</body>".format(expected_str))
+        hp._reset()
+        _, e = hp.parse("<body>{}</body>".format(elem_str))
+
+        self.assertTrue(len(e)>0)
+        self.assertEqual(len(ex), len(e))
+
+        def assert_equal_elements(e1, e2):
+            if isinstance(e1, str):
+                self.assertEqual(e1, e2)
+            else:
+                self.assertEqual(e1.name, e2.name)
+                for k,v in e1.attributes.items():
+                    self.assertEqual(v, e2.attributes[k])
+                for i, c in enumerate(e1.children):
+                    assert_equal_elements(c, e2.children[i])
+
+        assert_equal_elements(ex[0], e[0])
+
+
     def testTime(self):
         XML = """
  <body rid='4019888743' xmlns='http://jabber.org/protocol/httpbind' sid='948972a64d524f862107cdbd748d1d16'><iq id='980:getprefs' type='get'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq><iq id='981:getallignorelists' type='get'><query xmlns='jabber:iq:privacy'/></iq><test/><testing><ha/></testing></body>
@@ -52,13 +74,13 @@ class ParseTestCase(unittest.TestCase):
         b, e = hp.parse(XML)
 
         # need tests here
-
-        self.failUnlessEqual
-        (e[0],
-         "<presence from='KurodaJr@chesspark.com/cpc' type='unavailable' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/>",
-        'invalid xml {}'.format(e[0]))
-        self.failUnless(e[1]=="<iq to='search.chesspark.com' type='set' id='10059:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", e[1])
-        self.failUnless(e[2]=="<iq to='search.chesspark.com' type='set' id='10060:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>", 'invalid xml {}'.format(e[2]))
+        self.assertXMLEqual(
+            e[0],
+            "<presence from='KurodaJr@chesspark.com/cpc' type='unavailable' to='5252844@games.chesspark.com/KurodaJr@chesspark.com'/>")
+        self.assertXMLEqual(e[1],
+                            "<iq to='search.chesspark.com' type='set' id='10059:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>")
+        self.assertXMLEqual(e[2],
+                        "<iq to='search.chesspark.com' type='set' id='10060:enablepush'><search xmlns='http://onlinegamegroup.com/xml/chesspark-01' node='play'><filter><relative-rating>500</relative-rating><time-control-range name='speed'/></filter></search></iq>")
 
 
     def testParse(self):
@@ -70,8 +92,10 @@ class ParseTestCase(unittest.TestCase):
         b, e = hp.parse(XML)
 
         # need tests here
-        self.failUnless(e[0]=="<iq type='get' id='980:getprefs'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq>", e[0])
-        self.failUnless(e[1]=="<iq type='get' id='981:getallignorelists'><query xmlns='jabber:iq:privacy'/></iq>", e[1])
+        self.assertXMLEqual(e[0],
+                            "<iq type='get' id='980:getprefs'><query xmlns='jabber:iq:private'><preferences xmlns='http://chesspark.com/xml/chesspark-01'/></query></iq>")
+        self.assertXMLEqual(e[1],
+                            "<iq type='get' id='981:getallignorelists'><query xmlns='jabber:iq:privacy'/></iq>")
 
     def testParseEscapedAttribute(self):
         XML = """<body rid='4019888743' xmlns='http://jabber.org/protocol/httpbind' sid='948972a64d524f862107cdbd748d1d16'><presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/></body>"""
@@ -79,9 +103,8 @@ class ParseTestCase(unittest.TestCase):
         hp = HttpbParse()
 
         b, e = hp.parse(XML)
-
-        ex = "<presence to='room@conf.example.com/D&apos;Artagnan Longfellow' from='dude@example.com'/>"
-        self.assertEquals(e[0], ex)
+        ex = "<presence from='dude@example.com' to='room@conf.example.com/D&apos;Artagnan Longfellow'/>"
+        self.assertXMLEqual(e[0], ex)
 
 
     def testPrefixes(self):
@@ -95,7 +118,7 @@ class ParseTestCase(unittest.TestCase):
 
         hp = HttpbParse()
         b, e = hp.parse(XML)
-        self.failUnlessEqual(e[0], "<message to='test@test.com' xml:lang='fr'><body>test</body></message>", e)
+        self.failUnlessEqual(e[0], "<message xml:lang='fr' to='test@test.com'><body>test</body></message>", 'XML does not match {}'.format(e[0]))
 
 
 
@@ -111,9 +134,8 @@ class ParseTestCase(unittest.TestCase):
         hp = HttpbParse()
 
         b, e = hp.parse(XML)
-        self.failUnlessEqual(e[0],
-                             "<message to='dev@chat.chesspark.com' from='jack@chesspark.com/cpc' id='2900' type='groupchat'><body xmlns='jabber:client'>i type &gt; and i see &gt;&gt;&gt;</body></message>",
-                             'Invalid Xml')
+        self.assertXMLEqual(e[0],
+                             "<message to='dev@chat.chesspark.com' from='jack@chesspark.com/cpc' id='2900' type='groupchat'><body xmlns='jabber:client'>i type &gt; and i see &gt;&gt;&gt;</body></message>")
 
 
     def testCDATA(self):
@@ -186,7 +208,7 @@ class ParseTestCase(unittest.TestCase):
 
         b, e = hp.parse(XML)
 
-        expected = """<iq xmlns='jabber:client' type='set' id='6161:setprefs'>
+        expected = """<iq xmlns='jabber:client' id='6161:setprefs' type='set'>
         <query xmlns='jabber:iq:private'>
           <preferences xmlns='http://chesspark.com/xml/chesspark-01'>
             <statuses>
@@ -236,4 +258,4 @@ class ParseTestCase(unittest.TestCase):
         </query>
       </iq>"""
 
-        self.failUnlessEqual(expected, e[0])
+        self.assertXMLEqual(expected, e[0])

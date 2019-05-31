@@ -28,7 +28,7 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name='punjab',
-      version='0.15',
+      version='0.16',
       description='Punjab, a twisted BOSH server.',
       long_description = long_description,
       author='Christopher Zorn',
