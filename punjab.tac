@@ -6,8 +6,6 @@ from twisted.application import service, internet
 
 from punjab.httpb  import Httpb, HttpbService
 
-import sys
-
 root = static.File("./html")
 
 # uncomment only one of the bosh lines, use_raw does no xml
@@ -21,10 +19,7 @@ bosh = HttpbService(1)
 # or a black list
 # bosh.block_list = ['jabber.org', '.thetofu.com']
 
-root.putChild('http-bind', resource.IResource(bosh))
-
-if sys.version_info[0] == 3:
-  root.putChild(b'http-bind', resource.IResource(bosh))
+root.putChild(b'http-bind', resource.IResource(bosh))
 
 site  = server.Site(root)
 
