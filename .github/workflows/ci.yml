@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        twisted: ["Twisted", "git+https://github.com/twisted/twisted.git@trunk"]
+        pyopenssl: ["", "PyOpenSSL"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install flake8 service_identity
+          pip install "${{ matrix.twisted }}"
+          if [ -n "${{ matrix.pyopenssl }}" ]; then
+            pip install ${{ matrix.pyopenssl }}
+          fi
+          python setup.py install
+
+      - name: Run tests
+        run: ./run_tests.sh
