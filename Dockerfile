@@ -10,17 +10,14 @@ RUN apt-get update \
   && useradd -ms /bin/bash punjab \
   && chown -R punjab:punjab /home/punjab
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 USER punjab
 
-COPY --chown=punjab:punjab *.* ./
-
 COPY --chown=punjab:punjab . .
 
-
-RUN pip install --user -U -r requirements.txt
-RUN python setup.py install --force --user
+RUN uv sync
 
 # Default command
 
-CMD twistd --nodaemon --python=run.py
+CMD uv run twistd --nodaemon --python=run.py

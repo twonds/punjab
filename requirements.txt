@@ -1,4 +1,0 @@
-flake8
-twisted
-pyopenssl
-service_identity

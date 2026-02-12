@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "punjab"
+version = "0.16"
+description = "Punjab, a twisted BOSH server."
+readme = "README.txt"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Christopher Zorn", email = "tofu@thetofu.com" },
+]
+
+dependencies = [
+    "twisted",
+    "pyopenssl",
+    "service_identity",
+]
+
+[project.urls]
+Homepage = "https://github.com/twonds/punjab"
+
+[dependency-groups]
+dev = [
+    "flake8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["punjab", "twisted"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"twisted/plugins/punjab_plugin.py" = "twisted/plugins/punjab_plugin.py"

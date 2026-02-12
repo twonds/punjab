@@ -43,6 +43,7 @@ class DummyPint(object):
 
     def __init__(self):
         self.v = False
+        self.reactor = reactor
 
 
 class XEP0206TestCase(test_basic.TestCase):

@@ -1,6 +1,5 @@
 #!/bin/bash
-python --version
-flake8 punjab
+uv run python --version
+uv run flake8 punjab
 
-cd tests;export PYTHONPATH=${PWD};trial xep124 testparser xep206
-
+cd tests;export PYTHONPATH=${PWD};uv run trial xep124 testparser xep206
