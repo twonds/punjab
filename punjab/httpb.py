@@ -3,7 +3,7 @@
 """
 from twisted.python import components
 from twisted.web import server, resource
-from twisted.internet import defer, task
+from twisted.internet import defer, task, reactor
 from twisted.python import log
 
 
@@ -590,6 +590,7 @@ class HttpbService(punjab.Service):
         else:
             self.make_session = make_session
         self.v = verbose
+        self.reactor = reactor
         self.sessions = {}
         self.polling = polling
         self.use_raw = use_raw
